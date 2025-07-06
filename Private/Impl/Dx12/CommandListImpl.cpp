@@ -218,6 +218,13 @@ uint64_t Dx12_FlushQueue(Dx12CommandQueue& queue)
 	return fenceVal;
 }
 
+void Dx12_FlushQueues()
+{
+	Dx12_FlushQueue(g_render.CopyQueue);
+	Dx12_FlushQueue(g_render.DirectQueue);
+	Dx12_FlushQueue(g_render.ComputeQueue);
+}
+
 static void Dx12_ReleaseCommandList(Dx12CommandList& cl)
 {
 	Dx12CommandListPool* pool = GetCommandListPoolForType(cl.DxType);
@@ -507,12 +514,12 @@ void CommandList::SetComputeRootCBV(uint32_t slot, ConstantBuffer_t cb)
 
 void CommandList::SetGraphicsRootCBV(uint32_t slot, DynamicBuffer_t cb)
 {
-	impl->CL.DxCl->SetGraphicsRootConstantBufferView(slot, Dx12_GetCbvAddress(cb));
+	impl->CL.DxCl->SetGraphicsRootConstantBufferView(slot, Dx12_GetDbAddress(cb));
 }
 
 void CommandList::SetComputeRootCBV(uint32_t slot, DynamicBuffer_t cb)
 {
-	impl->CL.DxCl->SetComputeRootConstantBufferView(slot, Dx12_GetCbvAddress(cb));
+	impl->CL.DxCl->SetComputeRootConstantBufferView(slot, Dx12_GetDbAddress(cb));
 }
 
 void CommandList::SetGraphicsRootSRV(uint32_t slot, ShaderResourceView_t srv)

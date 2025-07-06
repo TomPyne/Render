@@ -110,6 +110,11 @@ void RemoveRaytracingGeometryFromScene(RaytracingGeometry_t Geometry, Raytracing
     }
 }
 
+void BuildRaytracingScene(RaytracingScene_t Scene)
+{
+    BuildRaytracingSceneImpl(Scene);
+}
+
 void RenderRef(RaytracingGeometry_t geometry)
 {
     g_RaytracingGeometry.AddRef(geometry);

@@ -61,6 +61,9 @@ bool CreateRaytracingShaderTableImpl(RaytracingShaderTable_t ShaderTable, Raytra
 void AddRaytracingGeometryToSceneImpl(RaytracingGeometry_t Geometry, RaytracingScene_t Scene);
 void RemoveRaytracingGeometryFromSceneImpl(RaytracingGeometry_t Geometry, RaytracingScene_t Scene);
 
+// Blocking build, flushes GPU.
+void BuildRaytracingSceneImpl(RaytracingScene_t Scene);
+
 void DestroyRaytracingGeometryImpl(RaytracingGeometry_t RtGeometry);
 void DestroyRaytracingSceneImpl(RaytracingScene_t RtScene);
 void DestroyRaytracingPipelineStateImpl(RaytracingPipelineState_t RTPipelineState);

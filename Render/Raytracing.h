@@ -70,6 +70,9 @@ RaytracingShaderTable_t CreateRaytracingShaderTable(const RaytracingShaderTableL
 void AddRaytracingGeometryToScene(RaytracingGeometry_t Geometry, RaytracingScene_t Scene);
 void RemoveRaytracingGeometryFromScene(RaytracingGeometry_t Geometry, RaytracingScene_t Scene);
 
+// Blocking build, flushes GPU.
+void BuildRaytracingScene(RaytracingScene_t Scene);
+
 void RenderRef(RaytracingGeometry_t geometry);
 void RenderRef(RaytracingScene_t scene);
 void RenderRef(RaytracingPipelineState_t RTPipelineState);

@@ -93,6 +93,7 @@ struct Dx12StaticBufferAllocation
 extern Dx12RenderGlobals g_render;
 
 uint64_t Dx12_FlushQueue(Dx12CommandQueue& queue);
+void Dx12_FlushQueues();
 
 IDxcBlob* Dx12_GetVertexShaderBlob(VertexShader_t vs);
 IDxcBlob* Dx12_GetPixelShaderBlob(PixelShader_t ps);
@@ -141,7 +142,7 @@ D3D12_INDEX_BUFFER_VIEW Dx12_GetIndexBufferView(DynamicBuffer_t db, RenderFormat
 ID3D12Resource* Dx12_GetDynamicBufferResource(DynamicBuffer_t db, size_t* outOffset);
 
 D3D12_GPU_VIRTUAL_ADDRESS Dx12_GetCbvAddress(ConstantBuffer_t cb);
-D3D12_GPU_VIRTUAL_ADDRESS Dx12_GetCbvAddress(DynamicBuffer_t db);
+D3D12_GPU_VIRTUAL_ADDRESS Dx12_GetDbAddress(DynamicBuffer_t db);
 D3D12_GPU_VIRTUAL_ADDRESS Dx12_GetVbAddress(VertexBuffer_t vb);
 D3D12_GPU_VIRTUAL_ADDRESS Dx12_GetIbAddress(IndexBuffer_t ib);
 D3D12_GPU_VIRTUAL_ADDRESS Dx12_GetSbAddress(StructuredBuffer_t sb);

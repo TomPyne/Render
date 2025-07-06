@@ -261,9 +261,7 @@ void Dx12_TexturesProcessPendingDeletes(bool flush)
 
 	if (flush)
 	{
-		Dx12_FlushQueue(g_render.CopyQueue);
-		Dx12_FlushQueue(g_render.DirectQueue);
-		Dx12_FlushQueue(g_render.ComputeQueue);
+		Dx12_FlushQueues();
 	}
 
 	const uint64_t CopyFrameFence = g_render.CopyQueue.DxFence->GetCompletedValue();
