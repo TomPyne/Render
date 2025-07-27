@@ -104,7 +104,7 @@ D3D12_COMMAND_QUEUE_DESC CreateCommandQueueDesc(D3D12_COMMAND_LIST_TYPE type)
 {
 	D3D12_COMMAND_QUEUE_DESC desc = {};
 	desc.Type = type;
-	desc.NodeMask = 1u;
+	desc.NodeMask = 0u;
 	desc.Priority = D3D12_COMMAND_QUEUE_PRIORITY_NORMAL;
 	desc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
 
@@ -131,6 +131,14 @@ ComPtr<ID3D12Fence> Dx12_CreateFence(uint64_t fenceValue)
 		return {};
 
 	return dxFence;
+}
+
+void InitCommandQueue(Dx12CommandQueue& Queue, D3D12_COMMAND_LIST_TYPE Type)
+{
+	Queue.DxCommandQueue = CreateDxCommandQueue(Type);
+	Queue.DxFence = Dx12_CreateFence(0);
+	Queue.FenceEventHandle = CreateEvent(nullptr, FALSE, FALSE, nullptr);
+	Queue.FenceValue = 0;
 }
 
 bool Render_Init(const RenderInitParams& params)
@@ -184,17 +192,9 @@ bool Render_Init(const RenderInitParams& params)
 
 	g_render.RootSignature = CreateRootSignature(params.RootSigDesc);
 
-	g_render.DirectQueue.DxCommandQueue = CreateDxCommandQueue(D3D12_COMMAND_LIST_TYPE_DIRECT);
-	g_render.DirectQueue.DxFence = Dx12_CreateFence(0);
-	g_render.DirectQueue.FenceValue = 0;
-
-	g_render.ComputeQueue.DxCommandQueue = CreateDxCommandQueue(D3D12_COMMAND_LIST_TYPE_COMPUTE);
-	g_render.ComputeQueue.DxFence = Dx12_CreateFence(0);
-	g_render.ComputeQueue.FenceValue = 0;
-
-	g_render.CopyQueue.DxCommandQueue = CreateDxCommandQueue(D3D12_COMMAND_LIST_TYPE_COPY);
-	g_render.CopyQueue.DxFence = Dx12_CreateFence(0);
-	g_render.CopyQueue.FenceValue = 0;
+	InitCommandQueue(g_render.DirectQueue, D3D12_COMMAND_LIST_TYPE_DIRECT);
+	InitCommandQueue(g_render.ComputeQueue, D3D12_COMMAND_LIST_TYPE_COMPUTE);
+	InitCommandQueue(g_render.CopyQueue, D3D12_COMMAND_LIST_TYPE_COPY);
 
 	return true;
 }
@@ -290,7 +290,9 @@ uint64_t Dx12_Signal(CommandListType queue)
 {
 	Dx12CommandQueue* commandQueue = Dx12_GetCommandQueue(queue);
 
-	uint64_t value = commandQueue->FenceValue.fetch_add(1u);	
+	commandQueue->FenceValue++;
+
+	uint64_t value = commandQueue->FenceValue.load();	
 
 	DXENSURE(commandQueue->DxCommandQueue->Signal(commandQueue->DxFence.Get(), value));
 
