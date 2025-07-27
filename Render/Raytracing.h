@@ -1,6 +1,7 @@
 #pragma once
 
 #include "RenderTypes.h"
+#include "RootSignature.h"
 #include "Shaders.h"
 
 namespace rl
@@ -14,16 +15,51 @@ RENDER_TYPE(RaytracingPipelineState_t);
 
 RENDER_TYPE(RaytracingShaderTable_t);
 
-struct RaytracingShaderRecord;
+enum class RaytracingShaderRecordType : uint32_t
+{
+	HITGROUP,
+	DATA,
+};
+
+struct RaytracingShaderRecordHitGroup
+{
+	RaytracingAnyHitShader_t AnyHitShader = {};
+	RaytracingClosestHitShader_t ClosestHitShader = {};
+};
+
+struct RaytracingShaderRecordData
+{
+	uint32_t Data[4];
+};
+
+struct RaytracingShaderRecord
+{
+	RaytracingShaderRecordType Type;
+	union
+	{
+		RaytracingShaderRecordHitGroup HitGroup;
+		RaytracingShaderRecordData Data;
+	};
+
+	RaytracingShaderRecord(RaytracingShaderRecordType InType)
+		: Type(InType)
+	{
+	}
+};
+
 struct RaytracingShaderTableLayout
 {
-	void AddRayGenShader(RaytracingRayGenShader_t RayGenShader);
-	void AddMissShader(RaytracingMissShader_t MissShader);
+	~RaytracingShaderTableLayout();
+
 	void AddHitGroup(RaytracingAnyHitShader_t AnyHitShader, RaytracingClosestHitShader_t ClosestHitShader, uint8_t* Data, size_t DataSize);
 
 	const std::vector<RaytracingShaderRecord>& GetRecords() const noexcept { return Records; }
 	uint32_t GetHitGroupStride() const noexcept { return HitGroupStride; }
+
+	RaytracingRayGenShader_t RayGenShader = {};
+	RaytracingMissShader_t MissShader = {};
 private:
+
 	std::vector<RaytracingShaderRecord> Records;
 	uint32_t HitGroupStride = 0;
 };
@@ -35,6 +71,7 @@ struct RaytracingPipelineStateDesc
 	RaytracingAnyHitShader_t AnyHitShader = {};
 	RaytracingClosestHitShader_t ClosestHitShader = {};
 	uint32_t MaxRayRecursion = 2;
+	RootSignature_t RootSig = RootSignature_t::INVALID;
 
 	std::wstring DebugName;
 };
@@ -64,7 +101,7 @@ RaytracingScene_t CreateRaytracingScene();
 
 RaytracingPipelineState_t CreateRaytracingPipelineState(const RaytracingPipelineStateDesc& Desc);
 
-RaytracingShaderTable_t CreateRaytracingShaderTable(const RaytracingShaderTableLayout& Layout);
+RaytracingShaderTable_t CreateRaytracingShaderTable(RaytracingPipelineState_t RaytracingPipelineState, const RaytracingShaderTableLayout& Layout);
 
 // Perhaps return an geometry index from here to assist with creating shader tables
 void AddRaytracingGeometryToScene(RaytracingGeometry_t Geometry, RaytracingScene_t Scene);
@@ -80,5 +117,6 @@ void RenderRef(RaytracingPipelineState_t RTPipelineState);
 void RenderRelease(RaytracingGeometry_t geometry);
 void RenderRelease(RaytracingScene_t scene);
 void RenderRelease(RaytracingPipelineState_t RTPipelineState);
+void RenderRelease(RaytracingShaderTable_t RTShaderTable);
 
 }

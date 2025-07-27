@@ -19,7 +19,21 @@ IDArray<RaytracingScene_t, RaytracingSceneData> g_RaytracingScenes;
 
 IDArray<RaytracingPipelineState_t, RaytracingPipelineStateDesc> g_RaytracingPipelines;
 
-IDArray<RaytracingShaderTable_t, RaytracingShaderTableLayout> g_RaytracingShaderTables;
+struct RaytracingShaderTableData
+{
+ //   RaytracingShaderTableData(const RaytracingPipelineStatePtr& InRaytracingPipelineState, const RaytracingShaderTableLayout& InLayout)
+	//	: RaytracingPipelineState(InRaytracingPipelineState), Layout(InLayout)
+	//{
+	//}
+	RaytracingPipelineStatePtr RaytracingPipelineState;
+    RaytracingShaderTableLayout Layout;
+};
+
+IDArray<RaytracingShaderTable_t, RaytracingShaderTableData> g_RaytracingShaderTables;
+
+RaytracingShaderTableLayout::~RaytracingShaderTableLayout()
+{
+}
 
 RaytracingGeometry_t CreateRaytracingGeometry(const RaytracingGeometryDesc& Desc)
 {
@@ -89,9 +103,17 @@ RaytracingPipelineState_t CreateRaytracingPipelineState(const RaytracingPipeline
     return Handle;
 }
 
-RaytracingShaderTable_t CreateRaytracingShaderTable(const RaytracingShaderTableLayout& Layout)
+RaytracingShaderTable_t CreateRaytracingShaderTable(RaytracingPipelineState_t RaytracingPipelineState, const RaytracingShaderTableLayout& Layout)
 {
-    return RaytracingShaderTable_t();
+    RaytracingShaderTable_t Handle = g_RaytracingShaderTables.Make(RaytracingPipelineStatePtr(RaytracingPipelineState), Layout);
+
+	if (!CreateRaytracingShaderTableImpl(Handle, RaytracingPipelineState, Layout))
+	{
+		g_RaytracingShaderTables.Release(Handle);
+		return RaytracingShaderTable_t::INVALID;
+	}
+
+    return Handle;
 }
 
 void AddRaytracingGeometryToScene(RaytracingGeometry_t Geometry, RaytracingScene_t Scene)
@@ -154,18 +176,12 @@ void RenderRelease(RaytracingPipelineState_t RTPipelineState)
     }
 }
 
-void RaytracingShaderTableLayout::AddRayGenShader(RaytracingRayGenShader_t RayGenShader)
+void RenderRelease(RaytracingShaderTable_t RTShaderTable)
 {
-    RaytracingShaderRecord Record(RaytracingShaderRecordType::RAYGEN);
-    Record.RayGenShader.RayGenShader = RayGenShader;
-    Records.push_back(Record);
-}
-
-void RaytracingShaderTableLayout::AddMissShader(RaytracingMissShader_t MissShader)
-{
-    RaytracingShaderRecord Record(RaytracingShaderRecordType::MISS);
-    Record.MissShader.MissShader = MissShader;
-    Records.push_back(Record);
+	if (g_RaytracingShaderTables.Release(RTShaderTable))
+	{
+        DestroyRaytracingShaderTableImpl(RTShaderTable);
+	}
 }
 
 void RaytracingShaderTableLayout::AddHitGroup(RaytracingAnyHitShader_t AnyHitShader, RaytracingClosestHitShader_t ClosestHitShader, uint8_t* Data, size_t DataSize)

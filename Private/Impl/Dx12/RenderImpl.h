@@ -34,6 +34,7 @@ struct Dx12CommandQueue
 {
 	ComPtr<ID3D12CommandQueue> DxCommandQueue;
 	ComPtr<ID3D12Fence> DxFence;
+	HANDLE FenceEventHandle;
 	std::atomic<uint64_t> FenceValue = 0u;
 };
 
@@ -92,7 +93,7 @@ struct Dx12StaticBufferAllocation
 
 extern Dx12RenderGlobals g_render;
 
-uint64_t Dx12_FlushQueue(Dx12CommandQueue& queue);
+void Dx12_FlushQueue(Dx12CommandQueue& queue);
 void Dx12_FlushQueues();
 
 IDxcBlob* Dx12_GetVertexShaderBlob(VertexShader_t vs);
@@ -102,6 +103,7 @@ IDxcBlob* Dx12_GetMeshShaderBlob(MeshShader_t ms);
 IDxcBlob* Dx12_GetAmplificationShaderBlob(AmplificationShader_t as);
 IDxcBlob* Dx12_GetComputeShaderBlob(ComputeShader_t cs);
 IDxcBlob* Dx12_GetRayGenShaderBlob(RaytracingRayGenShader_t rgs);
+IDxcBlob* Dx12_GetRayMissShaderBlob(RaytracingMissShader_t rms);
 
 Dx12CommandList Dx12_AccquireCommandList(CommandListType type);
 Dx12CommandList Dx12_AccquireCommandList(D3D12_COMMAND_LIST_TYPE type);
@@ -125,11 +127,13 @@ void Dx12_SubmitDsvDescriptorHeap(Dx12DescriptorHeap&& heap, uint64_t graphicsFe
 D3D12_CPU_DESCRIPTOR_HANDLE Dx12_RtvDescriptorHandle(ID3D12DescriptorHeap* heap, RenderTargetView_t rtv);
 D3D12_CPU_DESCRIPTOR_HANDLE Dx12_DsvDescriptorHandle(ID3D12DescriptorHeap* heap, DepthStencilView_t dsv);
 
+// TODO: Switch all pipelines to be state objects
 Dx12GraphicsPipelineStateDesc* Dx12_GetPipelineState(GraphicsPipelineState_t pso);
 ID3D12PipelineState* Dx12_GetPipelineState(ComputePipelineState_t pso);
+ID3D12StateObject* Dx12_GetPipelineState(RaytracingPipelineState_t pso);
 
 // It is up to the calling code to free this memory reponsibly
-Dx12StaticBufferAllocation Dx12_CreateByteBuffer(const void* const Data, size_t Size);
+Dx12StaticBufferAllocation Dx12_CreateByteBuffer(const void* const Data, size_t Size, size_t Alignment = D3D12_RAW_UAV_SRV_BYTE_ALIGNMENT);
 Dx12StaticBufferAllocation Dx12_CreateRWByteBuffer(const void* const Data, size_t Size);
 D3D12_GPU_VIRTUAL_ADDRESS Dx12_GetByteBufferAddress(const Dx12StaticBufferAllocation& Alloc);
 D3D12_GPU_VIRTUAL_ADDRESS Dx12_GetByteBufferSize(const Dx12StaticBufferAllocation& Alloc);
@@ -178,5 +182,6 @@ ID3D12CommandSignature* Dx12_GetCommandSignature(IndirectCommand_t ic);
 
 void Dx12_BuildRaytracingScene(CommandList* cl, RaytracingScene_t scene);
 ID3D12StateObject* Dx12_GetRaytracingStateObject(RaytracingPipelineState_t RaytracingPipelineState);
-D3D12_DISPATCH_RAYS_DESC Dx12_GetDispatchRaysDesc(RaytracingShaderTable_t RayGenTable, RaytracingShaderTable_t HitGroupTable, RaytracingShaderTable_t MissTable, uint32_t X, uint32_t Y, uint32_t Z);
+D3D12_DISPATCH_RAYS_DESC Dx12_GetDispatchRaysDesc(RaytracingShaderTable_t ShaderTable, uint32_t X, uint32_t Y, uint32_t Z);
+ID3D12Resource* Dx12_GetRaytracingScene(RaytracingScene_t scene);
 }

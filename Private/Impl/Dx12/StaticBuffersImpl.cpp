@@ -553,9 +553,9 @@ void UploadBuffers(CommandList* cl)
 	g_uploadTargetBuffers.clear();
 }
 
-Dx12StaticBufferAllocation Dx12_CreateByteBuffer(const void* const Data, size_t Size)
+Dx12StaticBufferAllocation Dx12_CreateByteBuffer(const void* const Data, size_t Size, size_t Alignment)
 {
-	return g_BufferAllocator.Alloc(Size, D3D12_RAW_UAV_SRV_BYTE_ALIGNMENT, Data);
+	return g_BufferAllocator.Alloc(Size, Alignment, Data);
 }
 
 Dx12StaticBufferAllocation Dx12_CreateRWByteBuffer(const void* const Data, size_t Size)
