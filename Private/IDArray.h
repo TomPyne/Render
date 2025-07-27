@@ -40,6 +40,14 @@ struct IDArray
 		return id;
 	}
 
+	template<typename... Args>
+	ID Make(Args&&... InArgs)
+	{
+		ID id = MakeID_Lock();
+		Data[(uint32_t)id] = DataType(std::forward<Args>(InArgs)...);
+		return id;
+	}
+
 	void Update(ID id, DataType& data)
 	{
 		auto lock = ReadScopeLock();
