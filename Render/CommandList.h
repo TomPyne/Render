@@ -128,6 +128,11 @@ struct CommandList
 	void UAVBarrier(Texture_t tex);
 	void UAVBarrier(StructuredBuffer_t buf);
 
+	// Events and markers
+	void BeginEvent(const char* EventStr);
+	void EndEvent();
+	void AddMarker(const char* MarkerStr);
+
 	static CommandListPtr Create();
 	static CommandListPtr Create(CommandListType type);
 	static CommandList* CreateRaw(CommandListType type);
@@ -164,6 +169,29 @@ private:
 
 	void Begin();
 	void Finish();
+};
+
+struct CommandListEventScope
+{
+	explicit CommandListEventScope(CommandList* InCL, const char* Str)
+	{		
+		if (Str && InCL)
+		{
+			CL = InCL;
+			CL->BeginEvent(Str);
+		}
+	}
+
+	~CommandListEventScope()
+	{
+		if (CL)
+		{
+			CL->EndEvent();
+		}
+	}
+
+private:
+	CommandList* CL = nullptr;
 };
 
 }

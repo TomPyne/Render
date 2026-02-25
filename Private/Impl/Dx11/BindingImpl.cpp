@@ -104,7 +104,7 @@ bool CreateTextureSRVImpl(ShaderResourceView_t srv, Texture_t tex, RenderFormat 
 	return SUCCEEDED(g_render.Device->CreateShaderResourceView(res, &desc, &dxSRV.DxSrv));
 }
 
-bool CreateTextureUAVImpl(UnorderedAccessView_t uav, Texture_t tex, RenderFormat format, TextureDimension dim, uint32_t depthOrArraySize)
+bool CreateTextureUAVImpl(UnorderedAccessView_t uav, Texture_t tex, RenderFormat format, TextureDimension dim, uint32_t depthOrArraySize, uint32_t mipSlice)
 {
 	auto& dxUav = g_Uavs.Alloc(uav);
 
@@ -115,45 +115,45 @@ bool CreateTextureUAVImpl(UnorderedAccessView_t uav, Texture_t tex, RenderFormat
 	if (dim == TextureDimension::TEX1D)
 	{
 		desc.ViewDimension = D3D11_UAV_DIMENSION_TEXTURE1D;
-		desc.Texture1D.MipSlice = 0u;
+		desc.Texture1D.MipSlice = mipSlice;
 	}
 	else if (dim == TextureDimension::TEX1D_ARRAY)
 	{
 		desc.ViewDimension = D3D11_UAV_DIMENSION_TEXTURE1DARRAY;
-		desc.Texture1DArray.MipSlice = 0u;
+		desc.Texture1DArray.MipSlice = mipSlice;
 		desc.Texture1DArray.FirstArraySlice = 0u;
 		desc.Texture1DArray.ArraySize = depthOrArraySize;
 	}
 	else if (dim == TextureDimension::TEX2D)
 	{
 		desc.ViewDimension = D3D11_UAV_DIMENSION_TEXTURE2D;
-		desc.Texture2D.MipSlice = 0u;
+		desc.Texture2D.MipSlice = mipSlice;
 	}
 	else if (dim == TextureDimension::TEX2D_ARRAY)
 	{
 		desc.ViewDimension = D3D11_UAV_DIMENSION_TEXTURE2DARRAY;
-		desc.Texture2DArray.MipSlice = 0u;
-		desc.Texture2DArray.FirstArraySlice = 0u;
+		desc.Texture2DArray.MipSlice = mipSlice;
+		desc.Texture2DArray.FirstArraySlice = mipSlice;
 		desc.Texture2DArray.ArraySize = depthOrArraySize;
 	}
 	else if (dim == TextureDimension::CUBEMAP)
 	{
 		desc.ViewDimension = D3D11_UAV_DIMENSION_TEXTURE2DARRAY;
-		desc.Texture2DArray.MipSlice = 0u;
+		desc.Texture2DArray.MipSlice = mipSlice;
 		desc.Texture2DArray.FirstArraySlice = 0u;
 		desc.Texture2DArray.ArraySize = 6u;
 	}
 	else if (dim == TextureDimension::CUBEMAP_ARRAY)
 	{
 		desc.ViewDimension = D3D11_UAV_DIMENSION_TEXTURE2DARRAY;
-		desc.Texture2DArray.MipSlice = 0u;
+		desc.Texture2DArray.MipSlice = mipSlice;
 		desc.Texture2DArray.FirstArraySlice = 0u;
 		desc.Texture2DArray.ArraySize = 6u * depthOrArraySize;
 	}
 	else if (dim == TextureDimension::TEX3D)
 	{
 		desc.ViewDimension = D3D11_UAV_DIMENSION_TEXTURE3D;
-		desc.Texture3D.MipSlice = 0u;
+		desc.Texture3D.MipSlice = mipSlice;
 		desc.Texture3D.FirstWSlice = 0u;
 		desc.Texture3D.WSize = -1;
 	}

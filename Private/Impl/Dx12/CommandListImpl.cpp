@@ -624,6 +624,23 @@ void CommandList::UAVBarrier(StructuredBuffer_t buf)
 	Impl->CL.DxCl->ResourceBarrier(1u, &barrier);
 }
 
+void CommandList::BeginEvent(const char* EventStr) 
+{
+	assert(EventStr);
+	Impl->CL.DxCl->BeginEvent(1, EventStr, strlen(EventStr) + 1);
+}
+
+void CommandList::EndEvent()
+{
+	Impl->CL.DxCl->EndEvent();
+}
+
+void CommandList::AddMarker(const char* MarkerStr)
+{
+	assert(MarkerStr);
+	Impl->CL.DxCl->SetMarker(1, MarkerStr, strlen(MarkerStr) + 1);
+}
+
 CommandListPtr CommandList::Create()
 {
 	return Create(CommandListType::GRAPHICS);
