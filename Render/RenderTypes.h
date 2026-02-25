@@ -42,6 +42,11 @@ FWD_RENDER_TYPE(RaytracingScene_t);
 FWD_RENDER_TYPE(RaytracingPipelineState_t);
 FWD_RENDER_TYPE(RaytracingShaderTable_t);
 
+template<typename T>
+constexpr inline bool IsValid(T handle)
+{
+    return handle != T::INVALID;
+}
 
 using ShaderResourceViewPtr = RenderPtr<ShaderResourceView_t>;
 using UnorderedAccessViewPtr = RenderPtr<UnorderedAccessView_t>;
