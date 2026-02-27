@@ -627,7 +627,13 @@ void CommandList::UAVBarrier(StructuredBuffer_t buf)
 void CommandList::BeginEvent(const char* EventStr) 
 {
 	assert(EventStr);
-	Impl->CL.DxCl->BeginEvent(1, EventStr, strlen(EventStr) + 1);
+	Impl->CL.DxCl->BeginEvent(1, EventStr, static_cast<UINT>(strlen(EventStr)) + 1);
+}
+
+void CommandList::BeginEvent(const wchar_t* EventStr)
+{
+	assert(EventStr);
+	Impl->CL.DxCl->BeginEvent(0, EventStr, static_cast<UINT>(wcslen(EventStr)) + 1);
 }
 
 void CommandList::EndEvent()
@@ -638,7 +644,13 @@ void CommandList::EndEvent()
 void CommandList::AddMarker(const char* MarkerStr)
 {
 	assert(MarkerStr);
-	Impl->CL.DxCl->SetMarker(1, MarkerStr, strlen(MarkerStr) + 1);
+	Impl->CL.DxCl->SetMarker(1, MarkerStr, static_cast<UINT>(strlen(MarkerStr)) + 1);
+}
+
+void CommandList::AddMarker(const wchar_t* MarkerStr)
+{
+	assert(MarkerStr);
+	Impl->CL.DxCl->SetMarker(0, MarkerStr, static_cast<UINT>(wcslen(MarkerStr)) + 1);
 }
 
 CommandListPtr CommandList::Create()

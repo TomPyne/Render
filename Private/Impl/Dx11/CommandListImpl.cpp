@@ -432,6 +432,16 @@ void CommandList::TransitionResource(StructuredBuffer_t buf, ResourceTransitionS
 void CommandList::UAVBarrier(Texture_t tex) {}
 void CommandList::UAVBarrier(StructuredBuffer_t buf) {}
 
+void CommandList::BeginEvent(const char* EventStr) {}
+
+void CommandList::BeginEvent(const wchar_t* EventStr) {}
+
+void CommandList::EndEvent() {}
+
+void CommandList::AddMarker(const char* MarkerStr) {}
+
+void CommandList::AddMarker(const wchar_t* MarkerStr) {}
+
 CommandListPtr CommandList::Create()
 {
 	if (!g_FreeCommandLists.empty())

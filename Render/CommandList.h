@@ -130,8 +130,10 @@ struct CommandList
 
 	// Events and markers
 	void BeginEvent(const char* EventStr);
+	void BeginEvent(const wchar_t* EventStr);
 	void EndEvent();
 	void AddMarker(const char* MarkerStr);
+	void AddMarker(const wchar_t* MarkerStr);
 
 	static CommandListPtr Create();
 	static CommandListPtr Create(CommandListType type);
@@ -175,6 +177,15 @@ struct CommandListEventScope
 {
 	explicit CommandListEventScope(CommandList* InCL, const char* Str)
 	{		
+		if (Str && InCL)
+		{
+			CL = InCL;
+			CL->BeginEvent(Str);
+		}
+	}
+
+	explicit CommandListEventScope(CommandList* InCL, const wchar_t* Str)
+	{
 		if (Str && InCL)
 		{
 			CL = InCL;
