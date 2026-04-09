@@ -375,7 +375,7 @@ bool CreateTextureSRVImpl(ShaderResourceView_t srv, Texture_t tex, RenderFormat 
 	return true;
 }
 
-bool CreateTextureUAVImpl(UnorderedAccessView_t uav, Texture_t tex, RenderFormat format, TextureDimension dim, uint32_t depthOrArraySize)
+bool CreateTextureUAVImpl(UnorderedAccessView_t uav, Texture_t tex, RenderFormat format, TextureDimension dim, uint32_t depthOrArraySize, uint32_t mipSlice)
 {
 	SRVUAVDescriptor descriptor = {};
 
@@ -386,25 +386,25 @@ bool CreateTextureUAVImpl(UnorderedAccessView_t uav, Texture_t tex, RenderFormat
 	if (dim == TextureDimension::TEX1D)
 	{
 		descriptor.UavDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE1D;
-		descriptor.UavDesc.Texture1D.MipSlice = 0u;
+		descriptor.UavDesc.Texture1D.MipSlice = mipSlice;
 	}
 	else if (dim == TextureDimension::TEX1D_ARRAY)
 	{
 		descriptor.UavDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE1DARRAY;
-		descriptor.UavDesc.Texture1DArray.MipSlice = 0u;
+		descriptor.UavDesc.Texture1DArray.MipSlice = mipSlice;
 		descriptor.UavDesc.Texture1DArray.FirstArraySlice = 0u;
-		descriptor.UavDesc.Texture1DArray.ArraySize = depthOrArraySize;		
+		descriptor.UavDesc.Texture1DArray.ArraySize = depthOrArraySize;
 	}
 	else if (dim == TextureDimension::TEX2D)
 	{
 		descriptor.UavDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D;
-		descriptor.UavDesc.Texture2D.MipSlice = 0u;
+		descriptor.UavDesc.Texture2D.MipSlice = mipSlice;
 		descriptor.UavDesc.Texture2D.PlaneSlice = 0u;
 	}
 	else if (dim == TextureDimension::TEX2D_ARRAY)
 	{
 		descriptor.UavDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2DARRAY;
-		descriptor.UavDesc.Texture2DArray.MipSlice = 0u;
+		descriptor.UavDesc.Texture2DArray.MipSlice = mipSlice;
 		descriptor.UavDesc.Texture2DArray.FirstArraySlice = 0u;
 		descriptor.UavDesc.Texture2DArray.ArraySize = depthOrArraySize;
 		descriptor.UavDesc.Texture2DArray.PlaneSlice = 0u;
@@ -412,7 +412,7 @@ bool CreateTextureUAVImpl(UnorderedAccessView_t uav, Texture_t tex, RenderFormat
 	else if (dim == TextureDimension::CUBEMAP)
 	{
 		descriptor.UavDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2DARRAY;
-		descriptor.UavDesc.Texture2DArray.MipSlice = 0u;
+		descriptor.UavDesc.Texture2DArray.MipSlice = mipSlice;
 		descriptor.UavDesc.Texture2DArray.FirstArraySlice = 0u;
 		descriptor.UavDesc.Texture2DArray.ArraySize = 6u;
 		descriptor.UavDesc.Texture2DArray.PlaneSlice = 0u;
@@ -420,7 +420,7 @@ bool CreateTextureUAVImpl(UnorderedAccessView_t uav, Texture_t tex, RenderFormat
 	else if (dim == TextureDimension::CUBEMAP_ARRAY)
 	{
 		descriptor.UavDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2DARRAY;
-		descriptor.UavDesc.Texture2DArray.MipSlice = 0u;
+		descriptor.UavDesc.Texture2DArray.MipSlice = mipSlice;
 		descriptor.UavDesc.Texture2DArray.FirstArraySlice = 0u;
 		descriptor.UavDesc.Texture2DArray.ArraySize = 6u * depthOrArraySize;
 		descriptor.UavDesc.Texture2DArray.PlaneSlice = 0u;
@@ -428,7 +428,7 @@ bool CreateTextureUAVImpl(UnorderedAccessView_t uav, Texture_t tex, RenderFormat
 	else if (dim == TextureDimension::TEX3D)
 	{
 		descriptor.UavDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE3D;
-		descriptor.UavDesc.Texture3D.MipSlice = 0u;
+		descriptor.UavDesc.Texture3D.MipSlice = mipSlice;
 		descriptor.UavDesc.Texture3D.FirstWSlice = 0u;
 		descriptor.UavDesc.Texture3D.WSize = -1;
 	}

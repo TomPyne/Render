@@ -74,7 +74,8 @@ void RenderView::Resize(uint32_t x, uint32_t y)
 
 	for (uint32_t i = 0; i < RenderView::NumBackBuffers; i++)
 	{
-		DXENSURE(Impl->DxFrameFence->SetEventOnCompletion(Impl->FrameFenceValue[i], nullptr));
+		if(Impl->FrameFenceValue[i] > 0)
+			DXENSURE(Impl->DxFrameFence->SetEventOnCompletion(Impl->FrameFenceValue[i], nullptr));
 	}
 
 	DXENSURE(Impl->DxSwapChain->ResizeBuffers(0, (UINT)Width, (UINT)Height, DXGI_FORMAT_UNKNOWN, 0));

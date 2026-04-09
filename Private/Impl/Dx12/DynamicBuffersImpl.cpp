@@ -244,7 +244,7 @@ void DynamicBuffers_EndFrame()
 
 D3D12_VERTEX_BUFFER_VIEW Dx12_GetVertexBufferView(DynamicBuffer_t db, uint32_t offset, uint32_t stride)
 {
-	assert((size_t)db < g_dynamicBuffers.size() && "Dx12_GetIndexBufferView invalid db");
+	assert((size_t)db < g_dynamicBuffers.size() && "Dx12_GetVertexBufferView invalid db");
 
 	const DynamicAllocation& alloc = g_dynamicBuffers[(size_t)db];
 
@@ -256,9 +256,9 @@ D3D12_VERTEX_BUFFER_VIEW Dx12_GetVertexBufferView(DynamicBuffer_t db, uint32_t o
 	return view;
 }
 
-D3D12_GPU_VIRTUAL_ADDRESS Dx12_GetCbvAddress(DynamicBuffer_t db)
+D3D12_GPU_VIRTUAL_ADDRESS Dx12_GetDbAddress(DynamicBuffer_t db)
 {
-	assert((size_t)db < g_dynamicBuffers.size() && "Dx12_GetIndexBufferView invalid db");
+	assert((size_t)db < g_dynamicBuffers.size() && "Dx12_GetDbAddress invalid db");
 
 	const DynamicAllocation& alloc = g_dynamicBuffers[(size_t)db];
 

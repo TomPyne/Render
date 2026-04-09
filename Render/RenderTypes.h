@@ -42,6 +42,11 @@ FWD_RENDER_TYPE(RaytracingScene_t);
 FWD_RENDER_TYPE(RaytracingPipelineState_t);
 FWD_RENDER_TYPE(RaytracingShaderTable_t);
 
+template<typename T>
+constexpr inline bool IsValid(T handle)
+{
+    return handle != T::INVALID;
+}
 
 using ShaderResourceViewPtr = RenderPtr<ShaderResourceView_t>;
 using UnorderedAccessViewPtr = RenderPtr<UnorderedAccessView_t>;
@@ -287,10 +292,10 @@ struct Viewport
 
 struct ScissorRect
 {
-    uint32_t left;
-    uint32_t top;
-    uint32_t right;
-    uint32_t bottom;
+    int32_t left;
+    int32_t top;
+    int32_t right;
+    int32_t bottom;
 };
 
 enum class RenderResourceFlags : uint8_t

@@ -19,12 +19,12 @@ struct TextureViewData
 {
 	Texture_t Handle;
 	RenderFormat Format;
-	uint32_t MipLevels;
+	uint32_t MipLevelsOrSlice;
 	uint32_t DepthOrArraySize;
-	TextureViewData(Texture_t inTexture, RenderFormat inFormat, uint32_t inDepthOrArraySize = 1, uint32_t mipLevels = uint32_t(-1))
+	TextureViewData(Texture_t inTexture, RenderFormat inFormat, uint32_t inDepthOrArraySize = 1, uint32_t mipLevelsOrSlice = uint32_t(-1))
 		: Handle(inTexture)
 		, Format(inFormat)
-		, MipLevels(mipLevels)
+		, MipLevelsOrSlice(mipLevelsOrSlice)
 		, DepthOrArraySize(inDepthOrArraySize)
 	{}
 };
@@ -56,8 +56,8 @@ struct ViewData
 		: Type(ViewResourceType::Unknown)
 	{}
 
-	ViewData(Texture_t tex, RenderFormat format, uint32_t depthOrArraySize)
-		: Texture(tex, format, depthOrArraySize)
+	ViewData(Texture_t tex, RenderFormat format, uint32_t depthOrArraySize, uint32_t mipSlice)
+		: Texture(tex, format, depthOrArraySize, mipSlice)
 		, Type(ViewResourceType::Texture)
 	{}
 
@@ -135,7 +135,7 @@ void ReleaseDsv_Lock(DepthStencilView_t dsv)
 
 ShaderResourceView_t CreateTextureSRV(Texture_t tex, RenderFormat format, TextureDimension dim, uint32_t mipLevels, uint32_t depthOrArraySize)
 {
-	ShaderResourceView_t srv = CreateSrv_Lock(ViewData(tex, format, depthOrArraySize));
+	ShaderResourceView_t srv = CreateSrv_Lock(ViewData(tex, format, depthOrArraySize, mipLevels));
 
 	if (!CreateTextureSRVImpl(srv, tex, format, dim, mipLevels, depthOrArraySize))
 	{
@@ -146,11 +146,11 @@ ShaderResourceView_t CreateTextureSRV(Texture_t tex, RenderFormat format, Textur
 	return srv;
 }
 
-UnorderedAccessView_t CreateTextureUAV(Texture_t tex, RenderFormat format, TextureDimension dim, uint32_t depthOrArraySize)
+UnorderedAccessView_t CreateTextureUAV(Texture_t tex, RenderFormat format, TextureDimension dim, uint32_t depthOrArraySize, uint32_t mipSlice)
 {
-	UnorderedAccessView_t uav = CreateUav_Lock(ViewData(tex, format, depthOrArraySize));
+	UnorderedAccessView_t uav = CreateUav_Lock(ViewData(tex, format, depthOrArraySize, mipSlice));
 
-	if (!CreateTextureUAVImpl(uav, tex, format, dim, depthOrArraySize))
+	if (!CreateTextureUAVImpl(uav, tex, format, dim, depthOrArraySize, mipSlice))
 	{
 		ReleaseUav_Lock(uav);
 		return UnorderedAccessView_t::INVALID;
@@ -161,7 +161,7 @@ UnorderedAccessView_t CreateTextureUAV(Texture_t tex, RenderFormat format, Textu
 
 RenderTargetView_t CreateTextureRTV(Texture_t tex, RenderFormat format, TextureDimension dim, uint32_t depthOrArraySize)
 {
-	RenderTargetView_t rtv = CreateRtv_Lock(ViewData(tex, format, depthOrArraySize));
+	RenderTargetView_t rtv = CreateRtv_Lock(ViewData(tex, format, depthOrArraySize, -1));
 
 	if (!CreateTextureRTVImpl(rtv, tex, format, dim, depthOrArraySize))
 	{
@@ -174,7 +174,7 @@ RenderTargetView_t CreateTextureRTV(Texture_t tex, RenderFormat format, TextureD
 
 DepthStencilView_t CreateTextureDSV(Texture_t tex, RenderFormat format, TextureDimension dim, uint32_t depthOrArraySize)
 {
-	DepthStencilView_t dsv = CreateDsv_Lock(ViewData(tex, format, depthOrArraySize));
+	DepthStencilView_t dsv = CreateDsv_Lock(ViewData(tex, format, depthOrArraySize, -1));
 
 	if (!CreateTextureDSVImpl(dsv, tex, format, dim, depthOrArraySize))
 	{
@@ -277,7 +277,7 @@ static RenderFormat GetViewDataFormat(const ViewData* const data)
 
 ShaderResourceView_t AllocSRV(RenderFormat format, TextureDimension dim, uint32_t mipLevels, uint32_t depthOrArraySize)
 {
-	ShaderResourceView_t srv = CreateSrv_Lock(ViewData(Texture_t::INVALID, format, depthOrArraySize));
+	ShaderResourceView_t srv = CreateSrv_Lock(ViewData(Texture_t::INVALID, format, depthOrArraySize, -1));
 
 	if (!CreateTextureSRVImpl(srv, Texture_t::INVALID, format, dim, depthOrArraySize, mipLevels))
 	{
@@ -290,9 +290,9 @@ ShaderResourceView_t AllocSRV(RenderFormat format, TextureDimension dim, uint32_
 
 UnorderedAccessView_t AllocUAV(RenderFormat format, TextureDimension dim, uint32_t depthOrArraySize)
 {
-	UnorderedAccessView_t uav = CreateUav_Lock(ViewData(Texture_t::INVALID, format, depthOrArraySize));
+	UnorderedAccessView_t uav = CreateUav_Lock(ViewData(Texture_t::INVALID, format, depthOrArraySize, -1));
 
-	if (!CreateTextureUAVImpl(uav, Texture_t::INVALID, format, dim, depthOrArraySize))
+	if (!CreateTextureUAVImpl(uav, Texture_t::INVALID, format, dim, depthOrArraySize, 0))
 	{
 		ReleaseUav_Lock(uav);
 		return UnorderedAccessView_t::INVALID;
@@ -303,7 +303,7 @@ UnorderedAccessView_t AllocUAV(RenderFormat format, TextureDimension dim, uint32
 
 RenderTargetView_t AllocRTV(RenderFormat format, TextureDimension dim, uint32_t depthOrArraySize)
 {
-	RenderTargetView_t rtv = CreateRtv_Lock(ViewData(Texture_t::INVALID, format, depthOrArraySize));
+	RenderTargetView_t rtv = CreateRtv_Lock(ViewData(Texture_t::INVALID, format, depthOrArraySize, -1));
 
 	if (!CreateTextureRTVImpl(rtv, Texture_t::INVALID, format, dim, depthOrArraySize))
 	{
@@ -316,7 +316,7 @@ RenderTargetView_t AllocRTV(RenderFormat format, TextureDimension dim, uint32_t 
 
 DepthStencilView_t AllocDSV(RenderFormat format, TextureDimension dim, uint32_t depthOrArraySize)
 {
-	DepthStencilView_t dsv = CreateDsv_Lock(ViewData(Texture_t::INVALID, format, depthOrArraySize));
+	DepthStencilView_t dsv = CreateDsv_Lock(ViewData(Texture_t::INVALID, format, depthOrArraySize, -1));
 
 	if (!CreateTextureDSVImpl(dsv, Texture_t::INVALID, format, dim, depthOrArraySize))
 	{

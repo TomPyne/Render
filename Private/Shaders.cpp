@@ -22,6 +22,7 @@ struct ShaderData
 {
 	bool Compiled = false;
 	std::string Path;
+	std::string Directory;
 	ShaderMacros Macros;
 
 	std::string ShaderIDStr;
@@ -88,12 +89,13 @@ static void AppendShaderPlatformMacros(ShaderMacros* macros)
 	}
 }
 
-static void UpdateShader(ShaderData* data, const char* path, const ShaderMacros& macros, const std::string& shaderIdStr)
+static void UpdateShader(ShaderData* data, const char* path, const char* directory, const ShaderMacros& macros, const std::string& shaderIdStr)
 {
 	if (!data)
 		return;
 
 	data->Path = path;
+	data->Directory = directory ? directory : "";
 	data->Macros = macros;
 	data->ShaderIDStr = shaderIdStr;
 	data->Compiled = true;
@@ -114,15 +116,6 @@ ShaderHandle CreateShader(const char* path, const ShaderMacros& macros, const ch
 	{
 		handle = shaderArray.Create();
 
-		{
-			// TODO Multithread: Would be nicer if we could forward the constructor values to the shader in create I think to avoid this extra lock
-			auto lock = shaderArray.ReadScopeLock();
-
-			ShaderData* data = shaderArray.Get(handle);
-
-			UpdateShader(data, path, fullMacros, shaderIdStr);
-		}
-
 		// TODO: Move this directory stripping code to a shared place. Make less platform specific
 		std::string directory = {};
 		{
@@ -138,9 +131,19 @@ ShaderHandle CreateShader(const char* path, const ShaderMacros& macros, const ch
 				}
 			}
 		}
+		const char* directorycstr = directory.empty() ? nullptr : directory.c_str();
+
+		{
+			// TODO Multithread: Would be nicer if we could forward the constructor values to the shader in create I think to avoid this extra lock
+			auto lock = shaderArray.ReadScopeLock();
+
+			ShaderData* data = shaderArray.Get(handle);
+
+			UpdateShader(data, path, directorycstr, fullMacros, shaderIdStr);
+		}
 
 		// TODO: Make dialog box less platform specific
-		while (!CompileShader(handle, path, directory.empty() ? nullptr : directory.c_str(), fullMacros))
+		while (!CompileShader(handle, path, directorycstr, fullMacros))
 		{
 			std::string message = "Failed to compile " + std::string(path) + ", retry?";
 			int input = MessageBoxA(NULL, message.c_str(), "Shader compilation error", MB_RETRYCANCEL | MB_ICONERROR);
@@ -258,7 +261,7 @@ void ReloadShaderType(IDArray<ShaderHandle, ShaderData>& shaderArray)
 	{
 		if (data.Compiled)
 		{
-			CompileShader(handle, data.Path.c_str(), nullptr, data.Macros);
+			CompileShader(handle, data.Path.c_str(), data.Directory.c_str(), data.Macros);
 		}
 
 		return true;

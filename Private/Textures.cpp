@@ -58,6 +58,7 @@ Texture_t CreateTexture(const TextureCreateDesc& desc)
     descEx.Usage = ResourceUsage::DEFAULT;
     descEx.CpuAccess = TextureCPUAccess::NONE;
     descEx.InitialState = ResourceTransitionState::COMMON;
+    descEx.DebugName = desc.DebugName;
 
     return CreateTextureEx(descEx);
 }

@@ -92,8 +92,11 @@ ComPtr<IDxcResult> CompileShader(const std::string& shaderCode, const char* incl
 	std::vector<LPCWSTR> arguments;
 
 	// Entry point
-	arguments.push_back(L"-E");
-	arguments.push_back(L"main");
+	if (profile != ShaderProfile::LIB_6_3)
+	{
+		arguments.push_back(L"-E");
+		arguments.push_back(L"main");
+	}
 
 	// Shader profile
 	arguments.push_back(L"-T");

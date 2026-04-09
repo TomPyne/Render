@@ -195,17 +195,17 @@ bool CreateTextureImpl(Texture_t tex, const TextureCreateDescEx& desc)
 
 		uploadCl->TransitionResource(tex, ResourceTransitionState::COPY_DEST, desc.InitialState);
 
-		ComPtr<ID3D12Fence> uploadFence = Dx12_CreateFence(0);
+		ComPtr<ID3D12Fence> uploadFence = Dx12_CreateFence(0);	
+
+		CommandList::Execute(uploadCl);
 
 		Dx12_SignalFence(uploadFence.Get(), CommandListType::COPY, 1u);
 
 		{
 			auto lock = std::scoped_lock(g_UploadQueueMutex);
-			
+
 			g_UploadResources.emplace_back(std::move(uploadResource), std::move(uploadFence));
-		}		
-		
-		CommandList::Execute(uploadCl);
+		}
 	}
 
 	return true;
@@ -261,9 +261,7 @@ void Dx12_TexturesProcessPendingDeletes(bool flush)
 
 	if (flush)
 	{
-		Dx12_FlushQueue(g_render.CopyQueue);
-		Dx12_FlushQueue(g_render.DirectQueue);
-		Dx12_FlushQueue(g_render.ComputeQueue);
+		Dx12_FlushQueues();
 	}
 
 	const uint64_t CopyFrameFence = g_render.CopyQueue.DxFence->GetCompletedValue();

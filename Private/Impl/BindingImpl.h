@@ -7,7 +7,7 @@ namespace rl
 enum class TextureDimension : uint8_t;
 
 bool CreateTextureSRVImpl(ShaderResourceView_t srv, Texture_t tex, RenderFormat format, TextureDimension dim, uint32_t mipLevels, uint32_t depthOrArraySize);
-bool CreateTextureUAVImpl(UnorderedAccessView_t uav, Texture_t tex, RenderFormat format, TextureDimension dim, uint32_t depthOrArraySize);
+bool CreateTextureUAVImpl(UnorderedAccessView_t uav, Texture_t tex, RenderFormat format, TextureDimension dim, uint32_t depthOrArraySize, uint32_t mipSlice);
 bool CreateTextureRTVImpl(RenderTargetView_t rtv, Texture_t tex, RenderFormat format, TextureDimension dim, uint32_t depthOrArraySize);
 bool CreateTextureDSVImpl(DepthStencilView_t dsv, Texture_t tex, RenderFormat format, TextureDimension dim, uint32_t depthOrArraySize);
 

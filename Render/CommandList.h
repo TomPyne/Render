@@ -46,6 +46,7 @@ struct CommandList
 
 	void SetRootSignature();
 	void SetRootSignature(RootSignature_t rs);
+	void SetComputeRootSignature(RootSignature_t rs);
 
 	void ClearRenderTarget(RenderTargetView_t rtv, const float col[4]);
 	void ClearDepth(DepthStencilView_t dsv, float depth);
@@ -58,6 +59,8 @@ struct CommandList
 
 	void SetPipelineState(GraphicsPipelineState_t pso);
 	void SetPipelineState(ComputePipelineState_t pso);
+	void SetPipelineState(RaytracingPipelineState_t pso);
+
 	void SetVertexBuffers(uint32_t startSlot, uint32_t count, const VertexBuffer_t* const vbs, const uint32_t* const strides, const uint32_t* const offsets);
 	void SetVertexBuffers(uint32_t startSlot, uint32_t count, const DynamicBuffer_t* const vbs, const uint32_t* const strides, const uint32_t* const offsets);
 	void SetVertexBuffer(uint32_t slot, VertexBuffer_t vb, uint32_t stride, uint32_t offset);
@@ -82,7 +85,7 @@ struct CommandList
 
 	// Raytracing
 	void BuildRaytracingScene(RaytracingScene_t scene);
-	void DispatchRays(RaytracingShaderTable_t RayGenTable, RaytracingShaderTable_t HitGroupTable, RaytracingShaderTable_t MissTable, uint32_t X, uint32_t Y, uint32_t Z);
+	void DispatchRays(RaytracingShaderTable_t ShaderTable, uint32_t X, uint32_t Y, uint32_t Z);
 
 	// Dx11 Style Bind Commands
 	void BindVertexSRVs(uint32_t startSlot, uint32_t count, const ShaderResourceView_t* const srvs);
@@ -112,6 +115,7 @@ struct CommandList
 
 	void SetGraphicsRootSRV(uint32_t slot, ShaderResourceView_t srv);
 	void SetComputeRootSRV(uint32_t slot, ShaderResourceView_t srv);
+	void SetComputeRootSRV(uint32_t slot, RaytracingScene_t srv);
 
 	void SetGraphicsRootUAV(uint32_t slot, UnorderedAccessView_t uav);
 	void SetComputeRootUAV(uint32_t slot, UnorderedAccessView_t uav);
@@ -124,8 +128,12 @@ struct CommandList
 	void UAVBarrier(Texture_t tex);
 	void UAVBarrier(StructuredBuffer_t buf);
 
-	GraphicsPipelineState_t GetPreviousPSO() const noexcept { return LastPipeline; }
-	ComputePipelineState_t GetPreviousComputePSO() const noexcept { return LastComputePipeline; }
+	// Events and markers
+	void BeginEvent(const char* EventStr);
+	void BeginEvent(const wchar_t* EventStr);
+	void EndEvent();
+	void AddMarker(const char* MarkerStr);
+	void AddMarker(const wchar_t* MarkerStr);
 
 	static CommandListPtr Create();
 	static CommandListPtr Create(CommandListType type);
@@ -157,16 +165,44 @@ public:
 	BIND_HELPER_IMPL(BindTexturesAsComputeUAVs, UnorderedAccessView_t, GetTextureUAV, BindComputeUAVs);
 
 private:
-	std::unique_ptr<CommandListImpl> impl;
-
-	RootSignature_t BoundRootSignature = RootSignature_t::INVALID;
-	GraphicsPipelineState_t LastPipeline = GraphicsPipelineState_t::INVALID;
-	ComputePipelineState_t LastComputePipeline = ComputePipelineState_t::INVALID;
+	std::unique_ptr<CommandListImpl> Impl;
 
 	CommandListType Type = CommandListType::GRAPHICS;
 
 	void Begin();
 	void Finish();
+};
+
+struct CommandListEventScope
+{
+	explicit CommandListEventScope(CommandList* InCL, const char* Str)
+	{		
+		if (Str && InCL)
+		{
+			CL = InCL;
+			CL->BeginEvent(Str);
+		}
+	}
+
+	explicit CommandListEventScope(CommandList* InCL, const wchar_t* Str)
+	{
+		if (Str && InCL)
+		{
+			CL = InCL;
+			CL->BeginEvent(Str);
+		}
+	}
+
+	~CommandListEventScope()
+	{
+		if (CL)
+		{
+			CL->EndEvent();
+		}
+	}
+
+private:
+	CommandList* CL = nullptr;
 };
 
 }
