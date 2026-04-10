@@ -36,6 +36,11 @@ struct RenderPtr
 		: Handle(handle)
 	{}
 
+	inline bool IsValid() const noexcept
+	{
+		return Handle != RenderType_t::INVALID;
+	}
+
 	RenderPtr& operator=(const RenderPtr& other)
 	{
 		if (&this->Handle != &other)
