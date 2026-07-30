@@ -24,20 +24,19 @@ struct
 	SparseArray<ComPtr<IDxcBlob>, RaytracingClosestHitShader_t>	CompiledRayClosestHitBlobs;
 } g_shaders;
 
-bool CompileShaderInternal(ShaderProfile target, const char* path, const char* includeDirectory, const ShaderMacros& macros, ComPtr<IDxcBlob>& shaderBlob)
+ShaderCompileResult CompileShaderInternal(ShaderProfile target, const ShaderCompileParams Params, ComPtr<IDxcBlob>& shaderBlob)
 {	
-	ComPtr<IDxcResult> result = CompileShaderFromFile(path, includeDirectory, target, macros);
+	std::string ErrorMsg;
+	ComPtr<IDxcResult> result = CompileShaderFromFile(Params.Path, Params.Directory, target, Params.Macros, ErrorMsg);
 
 	if (!result)
 	{
-		return false;
+		return ErrorMsg.c_str();
 	}
 
 	if (!result->HasOutput(DXC_OUT_OBJECT))
 	{
-		OutputDebugStringA("CompileShader failed - result->HasOutput(DXC_OUT_OBJECT)");
-
-		return false;
+		return "CompileShader failed - result->HasOutput(DXC_OUT_OBJECT)\n";
 	}		
 
 	ComPtr<IDxcBlobUtf16> outputName;
@@ -47,54 +46,54 @@ bool CompileShaderInternal(ShaderProfile target, const char* path, const char* i
 	return true;
 }
 
-bool CompileShader(VertexShader_t handle, const char* path, const char* includeDirectory, const ShaderMacros& macros)
+ShaderCompileResult CompileShader(VertexShader_t handle, const ShaderCompileParams Params)
 {
-	return CompileShaderInternal(ShaderProfile::VS_6_0, path, includeDirectory, macros, g_shaders.CompiledVertexBlobs.Alloc(handle));
+	return CompileShaderInternal(ShaderProfile::VS_6_0, Params, g_shaders.CompiledVertexBlobs.Alloc(handle));
 }
 
-bool CompileShader(PixelShader_t handle, const char* path, const char* includeDirectory, const ShaderMacros& macros)
+ShaderCompileResult CompileShader(PixelShader_t handle, const ShaderCompileParams Params)
 {
-	return CompileShaderInternal(ShaderProfile::PS_6_0, path, includeDirectory, macros, g_shaders.CompiledPixelBlobs.Alloc(handle));
+	return CompileShaderInternal(ShaderProfile::PS_6_0, Params, g_shaders.CompiledPixelBlobs.Alloc(handle));
 }
 
-bool CompileShader(GeometryShader_t handle, const char* path, const char* includeDirectory, const ShaderMacros& macros)
+ShaderCompileResult CompileShader(GeometryShader_t handle, const ShaderCompileParams Params)
 {
-	return CompileShaderInternal(ShaderProfile::GS_6_0, path, includeDirectory, macros, g_shaders.CompiledGeometryBlobs.Alloc(handle));
+	return CompileShaderInternal(ShaderProfile::GS_6_0, Params, g_shaders.CompiledGeometryBlobs.Alloc(handle));
 }
 
-bool CompileShader(MeshShader_t handle, const char* path, const char* includeDirectory, const ShaderMacros& macros)
+ShaderCompileResult CompileShader(MeshShader_t handle, const ShaderCompileParams Params)
 {
-	return CompileShaderInternal(ShaderProfile::MS_6_0, path, includeDirectory, macros, g_shaders.CompiledMeshBlobs.Alloc(handle));
+	return CompileShaderInternal(ShaderProfile::MS_6_0, Params, g_shaders.CompiledMeshBlobs.Alloc(handle));
 }
 
-bool CompileShader(AmplificationShader_t handle, const char* path, const char* includeDirectory, const ShaderMacros& macros)
+ShaderCompileResult CompileShader(AmplificationShader_t handle, const ShaderCompileParams Params)
 {
-	return CompileShaderInternal(ShaderProfile::AS_6_0, path, includeDirectory, macros, g_shaders.CompiledAmplificationBlobs.Alloc(handle));
+	return CompileShaderInternal(ShaderProfile::AS_6_0, Params, g_shaders.CompiledAmplificationBlobs.Alloc(handle));
 }
 
-bool CompileShader(ComputeShader_t handle, const char* path, const char* includeDirectory, const ShaderMacros& macros)
+ShaderCompileResult CompileShader(ComputeShader_t handle, const ShaderCompileParams Params)
 {
-	return CompileShaderInternal(ShaderProfile::CS_6_0, path, includeDirectory, macros, g_shaders.CompiledComputeBlobs.Alloc(handle));
+	return CompileShaderInternal(ShaderProfile::CS_6_0, Params, g_shaders.CompiledComputeBlobs.Alloc(handle));
 }
 
-bool CompileShader(RaytracingRayGenShader_t handle, const char* path, const char* includeDirectory, const ShaderMacros& macros)
+ShaderCompileResult CompileShader(RaytracingRayGenShader_t handle, const ShaderCompileParams Params)
 {
-	return CompileShaderInternal(ShaderProfile::LIB_6_3, path, includeDirectory, macros, g_shaders.CompiledRayGenBlobs.Alloc(handle));
+	return CompileShaderInternal(ShaderProfile::LIB_6_3, Params, g_shaders.CompiledRayGenBlobs.Alloc(handle));
 }
 
-bool CompileShader(RaytracingMissShader_t handle, const char* path, const char* includeDirectory, const ShaderMacros& macros)
+ShaderCompileResult CompileShader(RaytracingMissShader_t handle, const ShaderCompileParams Params)
 {
-	return CompileShaderInternal(ShaderProfile::LIB_6_3, path, includeDirectory, macros, g_shaders.CompiledRayMissBlobs.Alloc(handle));
+	return CompileShaderInternal(ShaderProfile::LIB_6_3, Params, g_shaders.CompiledRayMissBlobs.Alloc(handle));
 }
 
-bool CompileShader(RaytracingAnyHitShader_t handle, const char* path, const char* includeDirectory, const ShaderMacros& macros)
+ShaderCompileResult CompileShader(RaytracingAnyHitShader_t handle, const ShaderCompileParams Params)
 {
-	return CompileShaderInternal(ShaderProfile::LIB_6_3, path, includeDirectory, macros, g_shaders.CompiledRayAnyHitBlobs.Alloc(handle));
+	return CompileShaderInternal(ShaderProfile::LIB_6_3, Params, g_shaders.CompiledRayAnyHitBlobs.Alloc(handle));
 }
 
-bool CompileShader(RaytracingClosestHitShader_t handle, const char* path, const char* includeDirectory, const ShaderMacros& macros)
+ShaderCompileResult CompileShader(RaytracingClosestHitShader_t handle, const ShaderCompileParams Params)
 {
-	return CompileShaderInternal(ShaderProfile::LIB_6_3, path, includeDirectory, macros, g_shaders.CompiledRayClosestHitBlobs.Alloc(handle));
+	return CompileShaderInternal(ShaderProfile::LIB_6_3, Params, g_shaders.CompiledRayClosestHitBlobs.Alloc(handle));
 }
 
 IDxcBlob* Dx12_GetVertexShaderBlob(VertexShader_t vs)

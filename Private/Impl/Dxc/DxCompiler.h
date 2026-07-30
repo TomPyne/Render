@@ -28,7 +28,7 @@ enum class ShaderProfile : uint8_t
 	COUNT
 };
 
-ComPtr<IDxcResult> CompileShaderFromFile(const std::string& path, const char* includeDirectory, ShaderProfile profile, const ShaderMacros& macros);
-ComPtr<IDxcResult> CompileShader(const std::string& shaderCode, const char* includeDirectory, ShaderProfile profile, const ShaderMacros& macros);
+ComPtr<IDxcResult> CompileShaderFromFile(const std::string& path, const char* includeDirectory, ShaderProfile profile, const ShaderMacros& macros, std::string& Error);
+ComPtr<IDxcResult> CompileShader(const std::string& shaderCode, const char* includeDirectory, ShaderProfile profile, const ShaderMacros& macros, std::string& Error);
 
 }

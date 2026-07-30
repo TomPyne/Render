@@ -21,6 +21,7 @@ ShaderMacro::ShaderMacro(const char* define, uint32_t value)
 struct ShaderData
 {
 	bool Compiled = false;
+
 	std::string Path;
 	std::string Directory;
 	ShaderMacros Macros;
@@ -143,8 +144,17 @@ ShaderHandle CreateShader(const char* path, const ShaderMacros& macros, const ch
 		}
 
 		// TODO: Make dialog box less platform specific
-		while (!CompileShader(handle, path, directorycstr, fullMacros))
+		const ShaderCompileParams Params = ShaderCompileParams(path, directorycstr, fullMacros);
+		while(true)
 		{
+			ShaderCompileResult CompileResult = CompileShader(handle, Params);
+			if (CompileResult)
+			{
+				break;
+			}
+
+			OutputDebugStringA(CompileResult.ErrorMessage.c_str());
+
 			std::string message = "Failed to compile " + std::string(path) + ", retry?";
 			int input = MessageBoxA(NULL, message.c_str(), "Shader compilation error", MB_RETRYCANCEL | MB_ICONERROR);
 
@@ -152,7 +162,6 @@ ShaderHandle CreateShader(const char* path, const ShaderMacros& macros, const ch
 			{
 				shaderArray.Release(handle);
 				return ShaderHandle::INVALID;
-				break;
 			}
 		}
 	}
@@ -261,7 +270,8 @@ void ReloadShaderType(IDArray<ShaderHandle, ShaderData>& shaderArray)
 	{
 		if (data.Compiled)
 		{
-			CompileShader(handle, data.Path.c_str(), data.Directory.c_str(), data.Macros);
+			ShaderCompileParams Params = ShaderCompileParams(data.Path.c_str(), data.Directory.c_str(), data.Macros);
+			CompileShader(handle, Params);
 		}
 
 		return true;

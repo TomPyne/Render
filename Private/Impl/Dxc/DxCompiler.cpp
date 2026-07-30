@@ -71,7 +71,7 @@ static std::string LoadShaderCode(const std::string& filePath)
 	return ret;
 }
 
-ComPtr<IDxcResult> CompileShader(const std::string& shaderCode, const char* includeDirectory, ShaderProfile profile, const ShaderMacros& macros)
+ComPtr<IDxcResult> CompileShader(const std::string& shaderCode, const char* includeDirectory, ShaderProfile profile, const ShaderMacros& macros, std::string& Error)
 {	
 	ComPtr<IDxcUtils> utils;
 	if (!DXENSURE(DxcCreateInstance(CLSID_DxcUtils, IID_PPV_ARGS(&utils))))
@@ -149,8 +149,7 @@ ComPtr<IDxcResult> CompileShader(const std::string& shaderCode, const char* incl
 	{
 		if (errors && errors->GetStringLength() > 0)
 		{
-			OutputDebugStringA((LPCSTR)errors->GetBufferPointer());
-
+			Error += std::string((LPCSTR)errors->GetBufferPointer());
 			return nullptr;
 		}
 	}
@@ -158,16 +157,16 @@ ComPtr<IDxcResult> CompileShader(const std::string& shaderCode, const char* incl
 	return result;
 }
 
-ComPtr<IDxcResult> CompileShaderFromFile(const std::string& path, const char* includeDirectory, ShaderProfile profile, const ShaderMacros& macros)
+ComPtr<IDxcResult> CompileShaderFromFile(const std::string& path, const char* includeDirectory, ShaderProfile profile, const ShaderMacros& macros, std::string& Error)
 {
 	std::string shaderCode = LoadShaderCode(path);
 	if (shaderCode.empty())
 	{
-		OutputDebugStringA("CompileShaderFromFile: failed to load shader code");
+		Error += "CompileShaderFromFile: failed to load shader code\n";
 		return nullptr;
 	}	
 
-	return CompileShader(shaderCode, includeDirectory, profile, macros);
+	return CompileShader(shaderCode, includeDirectory, profile, macros, Error);
 }
 
 }

@@ -63,9 +63,9 @@ static ComPtr<ID3D11ComputeShader>& AllocCs(ComputeShader_t cs)
 	return g_computeShaders[(size_t)cs];
 }
 
-bool CompileShaderInternal(const char* target, const char* path, const ShaderMacros& macros, ComPtr<ID3DBlob>& shaderBlob)
+ShaderCompileResult CompileShaderInternal(const char* target, const ShaderCompileParams Params, ComPtr<ID3DBlob>& shaderBlob)
 {
-	const size_t numMacros = macros.size();
+	const size_t numMacros = Params.Macros.size();
 	std::vector<D3D_SHADER_MACRO> dxMacros;
 	dxMacros.resize(numMacros + 1);
 
@@ -73,20 +73,20 @@ bool CompileShaderInternal(const char* target, const char* path, const ShaderMac
 	if (numMacros > 0)
 	{
 		for (size_t defIt = 0; defIt < numMacros; defIt++)
-			dxMacros[defIt] = D3D_SHADER_MACRO({ macros[defIt]._define.c_str(), macros[defIt]._value.c_str() });
+			dxMacros[defIt] = D3D_SHADER_MACRO({ Params.Macros[defIt]._define.c_str(), Params.Macros[defIt]._value.c_str() });
 
 		dxMacros[numMacros] = D3D_SHADER_MACRO({ NULL, NULL });
 
 		pdxMacros = dxMacros.data();
 	}
 
-	size_t len = strlen(path);
+	size_t len = strlen(Params.Path);
 
 	assert(len < MAX_PATH && "CompileShader path length exceeds MAX_PATH");
 
 	wchar_t wPath[MAX_PATH];
 
-	mbstowcs_s(&len, wPath, path, len);
+	mbstowcs_s(&len, wPath, Params.Path, len);
 
 	ComPtr<ID3DBlob> errBlob;
 
@@ -104,10 +104,10 @@ bool CompileShaderInternal(const char* target, const char* path, const ShaderMac
 
 	if (FAILED(hr))
 	{
-		fprintf(stderr, "Error compiling '%s' : \n\n", path);
+		fprintf(stderr, "Error compiling '%s' : \n\n", Params.Path);
 		if (errBlob)
 		{
-			fprintf(stderr, (char*)errBlob->GetBufferPointer());
+			return (char*)errBlob->GetBufferPointer();
 		}
 
 		return false;
@@ -116,13 +116,13 @@ bool CompileShaderInternal(const char* target, const char* path, const ShaderMac
     return true;
 }
 
-bool CompileShader(VertexShader_t handle, const char* path, const char* directory, const ShaderMacros& macros)
+ShaderCompileResult CompileShader(VertexShader_t handle, const ShaderCompileParams Params)
 {
 	AllocVertexBlob(handle);
 
 	auto& blob = g_vertexShaderBlobs[(uint32_t)handle];
 
-	if (!CompileShaderInternal(VS_PROFILE, path, macros, blob))
+	if (!CompileShaderInternal(VS_PROFILE, Params, blob))
 		return false;
 
 	auto& dxVs = AllocVs(handle);
@@ -130,10 +130,10 @@ bool CompileShader(VertexShader_t handle, const char* path, const char* director
 	return SUCCEEDED(g_render.Device->CreateVertexShader(blob->GetBufferPointer(), blob->GetBufferSize(), nullptr, &dxVs));
 }
 
-bool CompileShader(PixelShader_t handle, const char* path, const char* directory, const ShaderMacros& macros)
+ShaderCompileResult CompileShader(PixelShader_t handle, const ShaderCompileParams Params)
 {
 	ComPtr<ID3DBlob> shaderBlob;
-	if (!CompileShaderInternal(PS_PROFILE, path, macros, shaderBlob))
+	if (!CompileShaderInternal(PS_PROFILE, Params, shaderBlob))
 		return false;
 
 	auto& dxPs = AllocPs(handle);
@@ -141,10 +141,10 @@ bool CompileShader(PixelShader_t handle, const char* path, const char* directory
 	return SUCCEEDED(g_render.Device->CreatePixelShader(shaderBlob->GetBufferPointer(), shaderBlob->GetBufferSize(), nullptr, &dxPs));
 }
 
-bool CompileShader(GeometryShader_t handle, const char* path, const char* directory, const ShaderMacros& macros)
+ShaderCompileResult CompileShader(GeometryShader_t handle, const ShaderCompileParams Params)
 {
 	ComPtr<ID3DBlob> shaderBlob;
-	if(!CompileShaderInternal(GS_PROFILE, path, macros, shaderBlob))
+	if(!CompileShaderInternal(GS_PROFILE, Params, shaderBlob))
 		return false;
 
 	auto& dxGs = AllocGs(handle);
@@ -152,23 +152,23 @@ bool CompileShader(GeometryShader_t handle, const char* path, const char* direct
 	return SUCCEEDED(g_render.Device->CreateGeometryShader(shaderBlob->GetBufferPointer(), shaderBlob->GetBufferSize(), nullptr, &dxGs));
 }
 
-bool CompileShader(MeshShader_t handle, const char* path, const char* directory, const ShaderMacros& macros)
+ShaderCompileResult CompileShader(MeshShader_t handle, const ShaderCompileParams Params)
 {
 	assert(0 && "Unsupported");
 	return false;
 }
 
-bool CompileShader(AmplificationShader_t handle, const char* path, const char* directory, const ShaderMacros& macros)
+ShaderCompileResult CompileShader(AmplificationShader_t handle, const ShaderCompileParams Params)
 {
 	assert(0 && "Unsupported");
 	return false;
 }
 
-bool CompileShader(ComputeShader_t handle, const char* path, const char* directory, const ShaderMacros& macros)
+ShaderCompileResult CompileShader(ComputeShader_t handle, const ShaderCompileParams Params)
 {
 	ComPtr<ID3DBlob> shaderBlob;
 
-	if (!CompileShaderInternal(CS_PROFILE, path, macros, shaderBlob))
+	if (!CompileShaderInternal(CS_PROFILE, Params, shaderBlob))
 		return false;
 
 	auto& dxCs = AllocCs(handle);
@@ -176,25 +176,25 @@ bool CompileShader(ComputeShader_t handle, const char* path, const char* directo
 	return SUCCEEDED(g_render.Device->CreateComputeShader(shaderBlob->GetBufferPointer(), shaderBlob->GetBufferSize(), nullptr, &dxCs));
 }
 
-bool CompileShader(RaytracingRayGenShader_t handle, const char* path, const char* directory, const ShaderMacros& macros)
+ShaderCompileResult CompileShader(RaytracingRayGenShader_t handle, const ShaderCompileParams Params)
 {
 	assert(0 && "Unsupported");
 	return false;
 }
 
-bool CompileShader(RaytracingMissShader_t handle, const char* path, const char* directory, const ShaderMacros& macros)
+ShaderCompileResult CompileShader(RaytracingMissShader_t handle, const ShaderCompileParams Params)
 {
 	assert(0 && "Unsupported");
 	return false;
 }
 
-bool CompileShader(RaytracingAnyHitShader_t handle, const char* path, const char* directory, const ShaderMacros& macros)
+ShaderCompileResult CompileShader(RaytracingAnyHitShader_t handle, const ShaderCompileParams Params)
 {
 	assert(0 && "Unsupported");
 	return false;
 }
 
-bool CompileShader(RaytracingClosestHitShader_t handle, const char* path, const char* directory, const ShaderMacros& macros)
+ShaderCompileResult CompileShader(RaytracingClosestHitShader_t handle, const ShaderCompileParams Params)
 {
 	assert(0 && "Unsupported");
 	return false;
