@@ -268,11 +268,12 @@ D3D12_GPU_VIRTUAL_ADDRESS Dx12_GetDbAddress(DynamicBuffer_t db)
 D3D12_INDEX_BUFFER_VIEW Dx12_GetIndexBufferView(DynamicBuffer_t db, RenderFormat format, uint32_t offset)
 {
 	assert((size_t)db < g_dynamicBuffers.size() && "Dx12_GetIndexBufferView invalid db");
+	assert(format == RenderFormat::R32_UINT || format == RenderFormat::R16_UINT && "format must be R32_UINT or R16_UINT");
 
 	const DynamicAllocation& alloc = g_dynamicBuffers[(size_t)db];
 
 	D3D12_INDEX_BUFFER_VIEW view;
-	view.BufferLocation = alloc.pGpuMem + (D3D12_GPU_VIRTUAL_ADDRESS)offset;
+	view.BufferLocation = alloc.pGpuMem + ((D3D12_GPU_VIRTUAL_ADDRESS)offset * (format == RenderFormat::R32_UINT ? 4 : 2));
 	view.SizeInBytes = (UINT)alloc.Size;
 	view.Format = Dx12_Format(format);
 

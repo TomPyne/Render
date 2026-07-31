@@ -101,9 +101,7 @@ public:
 
 	Dx12StaticBufferAllocation Alloc(size_t size, size_t alignment, const void* const pData)
 	{
-		size_t alignedSize = AlignUp(size, alignment);
-
-		FreeBlocksBySizeMap::const_iterator smallestBlockBySizeIt = FreeBlocksBySize.lower_bound(alignedSize);
+		FreeBlocksBySizeMap::const_iterator smallestBlockBySizeIt = FreeBlocksBySize.lower_bound(size);
 		FreeBlocksByOffsetMap::const_iterator smallestBlockIt = FreeBlocksByOffset.cend();
 
 		size_t alignedOffset = 0;
@@ -124,7 +122,7 @@ public:
 			// Calculate the change in alignment, may leave a small initial block.
 			offsetDiff = alignedOffset - blockOffset;
 
-			if ((offsetDiff + alignedSize) <= blockSize)
+			if ((offsetDiff + size) <= blockSize)
 			{
 				break;
 			}
@@ -137,7 +135,7 @@ public:
 			return {};
 		}
 
-		if (alignedOffset + alignedSize > AllocationPageSize)
+		if (alignedOffset + size > AllocationPageSize)
 		{
 			__debugbreak();
 		}
@@ -145,8 +143,8 @@ public:
 		FreeBlocksBySize.erase(smallestBlockBySizeIt);
 		FreeBlocksByOffset.erase(smallestBlockIt);
 
-		const size_t newOffset = alignedOffset + alignedSize;
-		const size_t newSize = blockSize - alignedSize - offsetDiff;
+		const size_t newOffset = alignedOffset + size;
+		const size_t newSize = blockSize - size - offsetDiff;
 
 		if (offsetDiff > 0)
 		{
@@ -158,10 +156,9 @@ public:
 			AddFreeBlock(newOffset, newSize);
 		}
 
-		// Using size instead of aligned size is intentional so that the source alloc doesnt also need to be aligned.
 		memcpy((uint8_t*)pCpuMemory + alignedOffset, pData, size);
 
-		Dx12StaticBufferAllocation alloc = { pGpuMemory, alignedOffset, alignedSize, pBuffer.Get()};
+		Dx12StaticBufferAllocation alloc = { pGpuMemory, alignedOffset, size, pBuffer.Get()};
 
 		RequestUploadAlloc(alloc, pBuffer.Get(), pUploadBuffer.Get());
 
@@ -182,7 +179,8 @@ public:
 	void Free(const Dx12StaticBufferAllocation& alloc)
 	{
 		FreeBlocksByOffsetMap::iterator nextBlockIt = FreeBlocksByOffset.upper_bound(alloc.Offset);
-		FreeBlocksByOffsetMap::iterator prevBlockIt = nextBlockIt != FreeBlocksByOffset.begin() ? --nextBlockIt : FreeBlocksByOffset.end();
+		FreeBlocksByOffsetMap::iterator prevBlockIt = nextBlockIt;
+		if (prevBlockIt != FreeBlocksByOffset.begin()) --prevBlockIt; else prevBlockIt = FreeBlocksByOffset.end();
 
 		size_t newSize, newOffset;
 
@@ -458,8 +456,7 @@ bool CreateStructuredBufferImpl(StructuredBuffer_t sb, const void* const data, s
 	}
 	else
 	{
-		size_t alignment = stride < D3D12_RAW_UAV_SRV_BYTE_ALIGNMENT ? D3D12_RAW_UAV_SRV_BYTE_ALIGNMENT : stride;
-
+		// CreateStructuredBufferSRVImpl derives FirstElement as offset / stride, so offset must stay stride-aligned.
 		g_DxStructuredBuffers[sb] = g_BufferAllocator.Alloc(size, stride, data);
 	}
 
