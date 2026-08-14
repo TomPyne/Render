@@ -5,8 +5,6 @@
 namespace rl
 {
 
-RENDER_TYPE(Texture_t);
-
 enum class TextureDimension : uint8_t
 {
 	UNKNOWN,
@@ -78,9 +76,6 @@ const TextureCreateDescEx* GetTextureDesc(Texture_t tex);
 
 // The params here are for validation to ensure we are copying the intended data.
 void UpdateTexture(Texture_t tex, const void* const data, uint32_t width, uint32_t height, RenderFormat format);
-
-void RenderRef(Texture_t tex);
-void RenderRelease(Texture_t tex);
 
 void GetTextureDims(Texture_t tex, uint32_t* w, uint32_t* h);
 

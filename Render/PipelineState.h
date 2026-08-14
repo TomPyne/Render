@@ -8,9 +8,6 @@
 namespace rl
 {
 
-RENDER_TYPE(GraphicsPipelineState_t);
-RENDER_TYPE(ComputePipelineState_t);
-
 enum class PrimitiveTopologyType : uint8_t
 {
 	UNDEFINED,
@@ -210,12 +207,6 @@ struct ComputePipelineStateDesc
 
 GraphicsPipelineState_t CreateGraphicsPipelineState(const GraphicsPipelineStateDesc& desc, const InputElementDesc* inputs = nullptr, size_t inputCount = 0);
 ComputePipelineState_t CreateComputePipelineState(const ComputePipelineStateDesc& desc);
-
-void RenderRef(GraphicsPipelineState_t pso);
-void RenderRef(ComputePipelineState_t pso);
-
-void RenderRelease(GraphicsPipelineState_t pso);
-void RenderRelease(ComputePipelineState_t pso);
 
 size_t GetGraphicsPipelineStateCount();
 size_t GetComputePipelineStateCount();

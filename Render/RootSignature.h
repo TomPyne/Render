@@ -93,11 +93,6 @@ struct RootSignatureDesc
 	std::vector<SamplerDesc> GlobalSamplers;
 };
 
-RENDER_TYPE(RootSignature_t);
-
 RootSignature_t CreateRootSignature(const RootSignatureDesc& Desc);
-
-void RenderRef(RootSignature_t rs);
-void RenderRelease(RootSignature_t rs);
 
 }

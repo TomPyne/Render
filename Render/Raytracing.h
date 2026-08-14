@@ -6,15 +6,6 @@
 
 namespace rl
 {
-// Geometry
-RENDER_TYPE(RaytracingGeometry_t);
-RENDER_TYPE(RaytracingScene_t);
-
-// RTPSO
-RENDER_TYPE(RaytracingPipelineState_t);
-
-RENDER_TYPE(RaytracingShaderTable_t);
-
 enum class RaytracingShaderRecordType : uint32_t
 {
 	HITGROUP,
@@ -109,14 +100,5 @@ void RemoveRaytracingGeometryFromScene(RaytracingGeometry_t Geometry, Raytracing
 
 // Blocking build, flushes GPU.
 void BuildRaytracingScene(RaytracingScene_t Scene);
-
-void RenderRef(RaytracingGeometry_t geometry);
-void RenderRef(RaytracingScene_t scene);
-void RenderRef(RaytracingPipelineState_t RTPipelineState);
-
-void RenderRelease(RaytracingGeometry_t geometry);
-void RenderRelease(RaytracingScene_t scene);
-void RenderRelease(RaytracingPipelineState_t RTPipelineState);
-void RenderRelease(RaytracingShaderTable_t RTShaderTable);
 
 }

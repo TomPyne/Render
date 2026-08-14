@@ -14,33 +14,24 @@
 #define RENDER_TYPE(t) enum class t : uint32_t {INVALID}
 #define FWD_RENDER_TYPE(t) enum class t : uint32_t
 
+#define MANAGED_RENDER_TYPE(t, ptrAlias) \
+    RENDER_TYPE(t); \
+    void RenderRelease(t); \
+    void RenderRef(t); \
+    using ptrAlias = RenderPtr<t>
+
 namespace rl
 {
 
-FWD_RENDER_TYPE(ShaderResourceView_t);
-FWD_RENDER_TYPE(UnorderedAccessView_t);
-FWD_RENDER_TYPE(RenderTargetView_t);
-FWD_RENDER_TYPE(DepthStencilView_t);
-FWD_RENDER_TYPE(VertexBuffer_t);
-FWD_RENDER_TYPE(IndexBuffer_t);
-FWD_RENDER_TYPE(StructuredBuffer_t);
-FWD_RENDER_TYPE(ConstantBuffer_t);
+// Unmanaged handles, defined by the header that owns them
 FWD_RENDER_TYPE(DynamicBuffer_t);
-FWD_RENDER_TYPE(GraphicsPipelineState_t);
-FWD_RENDER_TYPE(ComputePipelineState_t);
-FWD_RENDER_TYPE(RootSignature_t);
 FWD_RENDER_TYPE(VertexShader_t);
 FWD_RENDER_TYPE(PixelShader_t);
 FWD_RENDER_TYPE(GeometryShader_t);
 FWD_RENDER_TYPE(MeshShader_t);
 FWD_RENDER_TYPE(AmplificationShader_t);
 FWD_RENDER_TYPE(ComputeShader_t);
-FWD_RENDER_TYPE(Texture_t);
 FWD_RENDER_TYPE(IndirectCommand_t);
-FWD_RENDER_TYPE(RaytracingGeometry_t);
-FWD_RENDER_TYPE(RaytracingScene_t);
-FWD_RENDER_TYPE(RaytracingPipelineState_t);
-FWD_RENDER_TYPE(RaytracingShaderTable_t);
 
 template<typename T>
 constexpr inline bool IsValid(T handle)
@@ -48,22 +39,22 @@ constexpr inline bool IsValid(T handle)
     return handle != T::INVALID;
 }
 
-using ShaderResourceViewPtr = RenderPtr<ShaderResourceView_t>;
-using UnorderedAccessViewPtr = RenderPtr<UnorderedAccessView_t>;
-using RenderTargetViewPtr = RenderPtr<RenderTargetView_t>;
-using DepthStencilViewPtr = RenderPtr<DepthStencilView_t>;
-using VertexBufferPtr = RenderPtr<VertexBuffer_t>;
-using IndexBufferPtr = RenderPtr<IndexBuffer_t>;
-using StructuredBufferPtr = RenderPtr<StructuredBuffer_t>;
-using ConstantBufferPtr = RenderPtr<ConstantBuffer_t>;
-using GraphicsPipelineStatePtr = RenderPtr<GraphicsPipelineState_t>;
-using ComputePipelineStatePtr = RenderPtr<ComputePipelineState_t>;
-using RootSignaturePtr = RenderPtr<RootSignature_t>;
-using TexturePtr = RenderPtr<Texture_t>;
-using RaytracingGeometryPtr = RenderPtr<RaytracingGeometry_t>;
-using RaytracingScenePtr = RenderPtr<RaytracingScene_t>;
-using RaytracingPipelineStatePtr = RenderPtr<RaytracingPipelineState_t>;
-using RaytracingShaderTablePtr = RenderPtr<RaytracingShaderTable_t>;
+MANAGED_RENDER_TYPE(ShaderResourceView_t, ShaderResourceViewPtr);
+MANAGED_RENDER_TYPE(UnorderedAccessView_t, UnorderedAccessViewPtr);
+MANAGED_RENDER_TYPE(RenderTargetView_t, RenderTargetViewPtr);
+MANAGED_RENDER_TYPE(DepthStencilView_t, DepthStencilViewPtr);
+MANAGED_RENDER_TYPE(VertexBuffer_t, VertexBufferPtr);
+MANAGED_RENDER_TYPE(IndexBuffer_t, IndexBufferPtr);
+MANAGED_RENDER_TYPE(StructuredBuffer_t, StructuredBufferPtr);
+MANAGED_RENDER_TYPE(ConstantBuffer_t, ConstantBufferPtr);
+MANAGED_RENDER_TYPE(GraphicsPipelineState_t, GraphicsPipelineStatePtr);
+MANAGED_RENDER_TYPE(ComputePipelineState_t, ComputePipelineStatePtr);
+MANAGED_RENDER_TYPE(RootSignature_t, RootSignaturePtr);
+MANAGED_RENDER_TYPE(Texture_t, TexturePtr);
+MANAGED_RENDER_TYPE(RaytracingGeometry_t, RaytracingGeometryPtr);
+MANAGED_RENDER_TYPE(RaytracingScene_t, RaytracingScenePtr);
+MANAGED_RENDER_TYPE(RaytracingPipelineState_t, RaytracingPipelineStatePtr);
+MANAGED_RENDER_TYPE(RaytracingShaderTable_t, RaytracingShaderTablePtr);
 
 struct CommandList;
 struct CommandListSubmissionGroup;

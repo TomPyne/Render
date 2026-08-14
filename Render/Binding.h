@@ -4,14 +4,6 @@
 
 namespace rl
 {
-RENDER_TYPE(ShaderResourceView_t);
-RENDER_TYPE(UnorderedAccessView_t);
-RENDER_TYPE(RenderTargetView_t);
-RENDER_TYPE(DepthStencilView_t);
-
-FWD_RENDER_TYPE(Texture_t);
-FWD_RENDER_TYPE(StructuredBuffer_t);
-
 enum class TextureDimension : uint8_t;
 
 struct TextureCreateDescEx;
@@ -46,16 +38,6 @@ RenderFormat GetSRVFormat(ShaderResourceView_t srv);
 RenderFormat GetUAVFormat(UnorderedAccessView_t uav);
 RenderFormat GetRTVFormat(RenderTargetView_t rtv);
 RenderFormat GetDSVFormat(DepthStencilView_t dsv);
-
-void RenderRef(ShaderResourceView_t srv);
-void RenderRef(UnorderedAccessView_t uav);
-void RenderRef(RenderTargetView_t rtv);
-void RenderRef(DepthStencilView_t dsv);
-
-void RenderRelease(ShaderResourceView_t srv);
-void RenderRelease(UnorderedAccessView_t uav);
-void RenderRelease(RenderTargetView_t rtv);
-void RenderRelease(DepthStencilView_t dsv);
 
 size_t GetShaderResourceViewCount();
 size_t GetUnorderedAccessViewCount();

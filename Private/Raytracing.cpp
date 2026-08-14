@@ -152,6 +152,11 @@ void RenderRef(RaytracingPipelineState_t RTPipelineState)
     g_RaytracingPipelines.AddRef(RTPipelineState);
 }
 
+void RenderRef(RaytracingShaderTable_t table)
+{
+    g_RaytracingShaderTables.AddRef(table);
+}
+
 void RenderRelease(RaytracingGeometry_t geometry)
 {
     if (g_RaytracingGeometry.Release(geometry))

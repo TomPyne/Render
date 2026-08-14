@@ -12,10 +12,6 @@
 namespace rl
 {
 
-RENDER_TYPE(VertexBuffer_t);
-RENDER_TYPE(IndexBuffer_t);
-RENDER_TYPE(StructuredBuffer_t);
-RENDER_TYPE(ConstantBuffer_t);
 RENDER_TYPE(DynamicBuffer_t);
 
 VertexBuffer_t CreateVertexBuffer(const void* const data, size_t size);
@@ -48,16 +44,6 @@ template<typename T> inline void UpdateVertexBufferFromArray(VertexBuffer_t vb, 
 template<typename T> inline void UpdateIndexBufferFromArray(IndexBuffer_t ib, const T* const data, size_t count) { UpdateIndexBuffer(ib, data, sizeof(T) * count); }
 template<typename T> inline void UpdateConstantBuffer(ConstantBuffer_t cb, const T* const data) { UpdateConstantBuffer(cb, sizeof(T)); }
 template<typename T> inline void UpdateStructuredBufferFromArray(StructuredBuffer_t sb, const T* const data, size_t count) { UpdateStructuredBuffer(sb, data, sizeof(T) * count); }
-
-void RenderRelease(VertexBuffer_t vb);
-void RenderRelease(IndexBuffer_t ib);
-void RenderRelease(StructuredBuffer_t sb);
-void RenderRelease(ConstantBuffer_t cb);
-
-void RenderRef(VertexBuffer_t vb);
-void RenderRef(IndexBuffer_t ib);
-void RenderRef(StructuredBuffer_t sb);
-void RenderRef(ConstantBuffer_t cb);
 
 void DynamicBuffers_NewFrame();
 void DynamicBuffers_EndFrame();
