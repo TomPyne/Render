@@ -62,6 +62,7 @@ struct GraphicsPipelineTargetDesc;
 struct ShaderMacro;
 struct RenderView;
 struct RenderInitParams;
+struct GraphicsPipelineStateDesc;
 
 using ShaderMacros = std::vector<ShaderMacro>;
 
