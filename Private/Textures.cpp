@@ -113,6 +113,11 @@ void UpdateTexture(Texture_t tex, const void* const data, uint32_t width, uint32
         UpdateTextureImpl(tex, data, width, height, format);
 }
 
+bool IsTextureUploadComplete(Texture_t tex)
+{
+    return IsTextureUploadCompleteImpl(tex);
+}
+
 void RenderRef(Texture_t tex)
 {
     g_Textures.AddRef(tex);

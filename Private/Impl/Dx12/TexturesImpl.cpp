@@ -14,13 +14,13 @@ struct Dx12Texture
 	uint64_t GraphicsFence = 0u;
 	uint64_t ComputeFence = 0u;
 	uint64_t CopyFence = 0u;
+	uint64_t UploadFence = 0u;	// Copy queue fence value of the initial data upload, 0 when there was none
 };
 
-// To simplify threading now I create a fence per upload object so we can spawn upload jobs from any thread
 struct Dx12UploadTexture
 {
 	ComPtr<ID3D12Resource> DxResource = {};
-	ComPtr<ID3D12Fence> DxFence = {};
+	uint64_t CopyFence = 0u;
 };
 
 SparseArray<Dx12Texture, Texture_t> g_DxTextures;
@@ -195,16 +195,20 @@ bool CreateTextureImpl(Texture_t tex, const TextureCreateDescEx& desc)
 
 		uploadCl->TransitionResource(tex, ResourceTransitionState::COPY_DEST, desc.InitialState);
 
-		ComPtr<ID3D12Fence> uploadFence = Dx12_CreateFence(0);	
-
 		CommandList::Execute(uploadCl);
 
-		Dx12_SignalFence(uploadFence.Get(), CommandListType::COPY, 1u);
+		const uint64_t uploadFence = Dx12_GetSubmittedFenceValue(uploadCl.get());
+
+		{
+			auto lock = std::unique_lock(g_TexturesMutex);
+
+			g_DxTextures[tex].UploadFence = uploadFence;
+		}
 
 		{
 			auto lock = std::scoped_lock(g_UploadQueueMutex);
 
-			g_UploadResources.emplace_back(std::move(uploadResource), std::move(uploadFence));
+			g_UploadResources.emplace_back(std::move(uploadResource), uploadFence);
 		}
 	}
 
@@ -214,6 +218,23 @@ bool CreateTextureImpl(Texture_t tex, const TextureCreateDescEx& desc)
 bool UpdateTextureImpl(Texture_t tex, const void* const data, uint32_t width, uint32_t height, RenderFormat format)
 {
 	return false;
+}
+
+bool IsTextureUploadCompleteImpl(Texture_t tex)
+{
+	uint64_t uploadFence = 0u;
+	{
+		auto lock = std::shared_lock(g_TexturesMutex);
+
+		if (!g_DxTextures.Valid(tex))
+		{
+			return false;
+		}
+
+		uploadFence = g_DxTextures[tex].UploadFence;
+	}
+
+	return uploadFence <= g_render.CopyQueue.DxFence->GetCompletedValue();
 }
 
 void DestroyTexture(Texture_t tex)
@@ -285,7 +306,7 @@ void Dx12_TexturesProcessPendingDeletes(bool flush)
 
 		for (int32_t i = (int32_t)g_UploadResources.size() - 1; i >= 0; --i)
 		{
-			if (g_UploadResources[i].DxFence->GetCompletedValue() > 0)
+			if (g_UploadResources[i].CopyFence <= CopyFrameFence)
 			{
 				g_UploadResources.erase(g_UploadResources.begin() + i);
 			}

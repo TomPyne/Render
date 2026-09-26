@@ -300,13 +300,6 @@ uint64_t Dx12_Signal(CommandListType queue)
 	return value;
 }
 
-void Dx12_SignalFence(ID3D12Fence* dxFence, CommandListType queue, uint64_t value)
-{
-	Dx12CommandQueue* commandQueue = Dx12_GetCommandQueue(queue);
-
-	DXENSURE(commandQueue->DxCommandQueue->Signal(dxFence, value));
-}
-
 void Dx12_Wait(CommandListType queue, uint64_t value)
 {
 	Dx12CommandQueue* commandQueue = Dx12_GetCommandQueue(queue);

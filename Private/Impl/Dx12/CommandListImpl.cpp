@@ -727,6 +727,11 @@ ID3D12GraphicsCommandList* Dx12_GetCommandList(CommandList* cl)
 	return cl->GetCommandListImpl()->CL.DxCl.Get();
 }
 
+uint64_t Dx12_GetSubmittedFenceValue(CommandList* cl)
+{
+	return cl->GetCommandListImpl()->CL.Allocator.FenceValue;
+}
+
 CommandList* CommandListSubmissionGroup::CreateCommandList()
 {
 	CommandLists.emplace_back(std::unique_ptr<CommandList>(CommandList::CreateRaw(Type)));

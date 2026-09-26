@@ -112,6 +112,7 @@ IDxcBlob* Dx12_GetRayMissShaderBlob(RaytracingMissShader_t rms);
 Dx12CommandList Dx12_AccquireCommandList(CommandListType type);
 Dx12CommandList Dx12_AccquireCommandList(D3D12_COMMAND_LIST_TYPE type);
 ID3D12GraphicsCommandList* Dx12_GetCommandList(CommandList* cl);
+uint64_t Dx12_GetSubmittedFenceValue(CommandList* cl);
 
 void Dx12_DescriptorsBeginFrame();
 
@@ -183,7 +184,6 @@ D3D12_COMMAND_LIST_TYPE Dx12_CommandListType(CommandListType type);
 
 Dx12CommandQueue* Dx12_GetCommandQueue(CommandListType type);
 uint64_t Dx12_Signal(CommandListType queue);
-void Dx12_SignalFence(ID3D12Fence* dxFence, CommandListType queue, uint64_t value);
 void Dx12_Wait(CommandListType queue, uint64_t value);
 
 D3D12_HEAP_PROPERTIES Dx12_HeapProps(D3D12_HEAP_TYPE type);

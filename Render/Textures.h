@@ -77,6 +77,9 @@ const TextureCreateDescEx* GetTextureDesc(Texture_t tex);
 // The params here are for validation to ensure we are copying the intended data.
 void UpdateTexture(Texture_t tex, const void* const data, uint32_t width, uint32_t height, RenderFormat format);
 
+// True once the initial data passed at creation has finished copying on the GPU, so the texture is safe to sample
+bool IsTextureUploadComplete(Texture_t tex);
+
 void GetTextureDims(Texture_t tex, uint32_t* w, uint32_t* h);
 
 enum class TextureResourceAccessMethod : uint32_t

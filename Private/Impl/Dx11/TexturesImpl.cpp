@@ -148,6 +148,12 @@ bool UpdateTextureImpl(Texture_t tex, const void* const data, uint32_t width, ui
 	return true;
 }
 
+bool IsTextureUploadCompleteImpl(Texture_t tex)
+{
+	// The immediate context orders the initial data before any later use
+	return g_DxTextures.Valid(tex);
+}
+
 void DestroyTexture(Texture_t tex)
 {
 	g_DxTextures[tex] = nullptr;
