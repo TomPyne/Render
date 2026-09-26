@@ -4,6 +4,8 @@
 #include "Shaders.h"
 #include "Dx12Types.h"
 
+#include <mutex>
+
 struct IDxcBlob;
 
 namespace rl
@@ -36,6 +38,7 @@ struct Dx12CommandQueue
 	ComPtr<ID3D12Fence> DxFence;
 	HANDLE FenceEventHandle;
 	std::atomic<uint64_t> FenceValue = 0u;
+	std::mutex SignalMutex;
 };
 
 struct Dx12CommandAllocator

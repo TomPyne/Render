@@ -290,9 +290,10 @@ uint64_t Dx12_Signal(CommandListType queue)
 {
 	Dx12CommandQueue* commandQueue = Dx12_GetCommandQueue(queue);
 
-	commandQueue->FenceValue++;
+	// Held across the increment and the Signal so fence values reach the queue in increasing order
+	auto lock = std::scoped_lock(commandQueue->SignalMutex);
 
-	uint64_t value = commandQueue->FenceValue.load();	
+	const uint64_t value = ++commandQueue->FenceValue;
 
 	DXENSURE(commandQueue->DxCommandQueue->Signal(commandQueue->DxFence.Get(), value));
 

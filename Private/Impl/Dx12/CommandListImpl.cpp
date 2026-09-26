@@ -216,11 +216,16 @@ Dx12CommandList Dx12_AccquireCommandList(D3D12_COMMAND_LIST_TYPE type)
 
 void Dx12_FlushQueue(Dx12CommandQueue& queue)
 {
-	queue.FenceValue++;
+	uint64_t value = 0u;
+	{
+		auto lock = std::scoped_lock(queue.SignalMutex);
 
-	queue.DxFence->Signal(queue.FenceValue);
+		value = ++queue.FenceValue;
 
-	if (DXENSURE(queue.DxFence->SetEventOnCompletion(queue.FenceValue, queue.FenceEventHandle)))
+		DXENSURE(queue.DxCommandQueue->Signal(queue.DxFence.Get(), value));
+	}
+
+	if (DXENSURE(queue.DxFence->SetEventOnCompletion(value, queue.FenceEventHandle)))
 	{
 		WaitForSingleObject(queue.FenceEventHandle, INFINITE);
 	}
