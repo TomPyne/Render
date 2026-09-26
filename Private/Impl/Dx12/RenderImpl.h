@@ -56,6 +56,7 @@ struct Dx12DescriptorHeap
 	ComPtr<ID3D12DescriptorHeap> DxHeap;
 	uint64_t DirectFenceValue = 0u;
 	uint64_t ComputeFenceValue = 0u;
+	uint64_t Generation = 0u;
 };
 
 struct Dx12GraphicsPipelineStateDesc
@@ -144,6 +145,19 @@ D3D12_VERTEX_BUFFER_VIEW Dx12_GetVertexBufferView(DynamicBuffer_t db, uint32_t o
 D3D12_INDEX_BUFFER_VIEW Dx12_GetIndexBufferView(IndexBuffer_t ib, RenderFormat format, uint32_t offset);
 D3D12_INDEX_BUFFER_VIEW Dx12_GetIndexBufferView(DynamicBuffer_t db, RenderFormat format, uint32_t offset);
 ID3D12Resource* Dx12_GetDynamicBufferResource(DynamicBuffer_t db, size_t* outOffset);
+
+struct Dx12UploadAllocation
+{
+	void* CpuMem = nullptr;
+	ID3D12Resource* Resource = nullptr;
+	size_t Offset = 0;
+};
+
+// Space in this frame's dynamic upload pages, only valid between DynamicBuffers_NewFrame and DynamicBuffers_EndFrame
+Dx12UploadAllocation Dx12_AllocateDynamicUpload(size_t size, size_t alignment);
+
+void Dx12_FrameConstantsNewFrame();
+void Dx12_FrameConstantsEndFrame(uint64_t graphicsFrameFence, uint64_t computeFrameFence);
 
 D3D12_GPU_VIRTUAL_ADDRESS Dx12_GetCbvAddress(ConstantBuffer_t cb);
 D3D12_GPU_VIRTUAL_ADDRESS Dx12_GetDbAddress(DynamicBuffer_t db);

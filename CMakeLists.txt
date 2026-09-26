@@ -120,6 +120,7 @@ target_sources(RenderDx12 PRIVATE
                 "Private/Impl/Dx12/Dx12Types.cpp"
                 "Private/Impl/Dx12/Dx12Types.h"
                 "Private/Impl/Dx12/DynamicBuffersImpl.cpp"
+                "Private/Impl/Dx12/FrameConstantsImpl.cpp"
                 "Private/Impl/Dx12/IndirectCommandsImpl.cpp"
                 "Private/Impl/Dx12/PipelineStateImpl.cpp"
                 "Private/Impl/Dx12/RaytracingImpl.cpp"

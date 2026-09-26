@@ -550,6 +550,16 @@ void CommandList::SetComputeRootCBV(uint32_t slot, DynamicBuffer_t cb)
 	Impl->CL.DxCl->SetComputeRootConstantBufferView(slot, Dx12_GetDbAddress(cb));
 }
 
+void CommandList::SetGraphicsRootCBV(uint32_t slot, GPUAddress_t address)
+{
+	Impl->CL.DxCl->SetGraphicsRootConstantBufferView(slot, static_cast<D3D12_GPU_VIRTUAL_ADDRESS>(address));
+}
+
+void CommandList::SetComputeRootCBV(uint32_t slot, GPUAddress_t address)
+{
+	Impl->CL.DxCl->SetComputeRootConstantBufferView(slot, static_cast<D3D12_GPU_VIRTUAL_ADDRESS>(address));
+}
+
 void CommandList::SetGraphicsRootSRV(uint32_t slot, ShaderResourceView_t srv)
 {
 	Impl->CL.DxCl->SetGraphicsRootShaderResourceView(slot, Impl->SrvGpuAdress(srv));

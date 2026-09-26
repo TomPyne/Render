@@ -33,6 +33,8 @@ FWD_RENDER_TYPE(AmplificationShader_t);
 FWD_RENDER_TYPE(ComputeShader_t);
 FWD_RENDER_TYPE(IndirectCommand_t);
 
+enum class GPUAddress_t : uint64_t { INVALID = 0 };
+
 template<typename T>
 constexpr inline bool IsValid(T handle)
 {

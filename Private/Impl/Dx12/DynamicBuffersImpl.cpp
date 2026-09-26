@@ -174,6 +174,20 @@ DynamicBuffer_t CreateDynamicBuffer(const void* const data, size_t size, bool is
 	return (DynamicBuffer_t)(g_dynamicBuffers.size() - 1u);
 }
 
+Dx12UploadAllocation Dx12_AllocateDynamicUpload(size_t size, size_t alignment)
+{
+	assert(g_dynamicUploadBuffer && "g_dynamicUploadBuffer null, DynamicBuffers_NewFrame not called");
+
+	const DynamicAllocation alloc = g_dynamicUploadBuffer->Allocate(size, alignment);
+
+	Dx12UploadAllocation upload;
+	upload.CpuMem = alloc.pCpuMem;
+	upload.Resource = alloc.DxResource;
+	upload.Offset = alloc.pGpuMem - alloc.DxResource->GetGPUVirtualAddress();
+
+	return upload;
+}
+
 DynamicBuffer_t CreateDynamicVertexBuffer(const void* const data, size_t size)
 {
 	return CreateDynamicBuffer(data, size, false);
@@ -223,6 +237,8 @@ void DynamicBuffers_NewFrame()
 	g_AvailableDynamicBuffers.pop_back();
 
 	g_dynamicUploadBuffer = &g_ActiveDynamicBuffers.back();
+
+	Dx12_FrameConstantsNewFrame();
 }
 
 void DynamicBuffers_EndFrame()
@@ -240,6 +256,8 @@ void DynamicBuffers_EndFrame()
 	g_ActiveDynamicBuffers.clear();
 
 	g_dynamicUploadBuffer = nullptr;
+
+	Dx12_FrameConstantsEndFrame(graphicsFrameFence, computeFrameFence);
 }
 
 D3D12_VERTEX_BUFFER_VIEW Dx12_GetVertexBufferView(DynamicBuffer_t db, uint32_t offset, uint32_t stride)

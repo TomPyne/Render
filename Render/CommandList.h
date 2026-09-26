@@ -112,6 +112,8 @@ struct CommandList
 	void SetComputeRootCBV(uint32_t slot, ConstantBuffer_t cb);
 	void SetGraphicsRootCBV(uint32_t slot, DynamicBuffer_t cb);
 	void SetComputeRootCBV(uint32_t slot, DynamicBuffer_t cb);
+	void SetGraphicsRootCBV(uint32_t slot, GPUAddress_t address);
+	void SetComputeRootCBV(uint32_t slot, GPUAddress_t address);
 
 	void SetGraphicsRootSRV(uint32_t slot, ShaderResourceView_t srv);
 	void SetComputeRootSRV(uint32_t slot, ShaderResourceView_t srv);

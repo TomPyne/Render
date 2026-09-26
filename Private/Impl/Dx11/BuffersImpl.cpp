@@ -243,4 +243,15 @@ void UploadBuffers(CommandList* cl)
 	(void)cl;
 }
 
+GPUAddress_t UploadFrameConstants(CommandList* cl, const ConstantUploadSpan_s* spans, size_t numSpans, size_t totalSize)
+{
+	assert(0); // Unsupported
+	return GPUAddress_t::INVALID;
+}
+
+size_t GetFrameConstantPageCount()
+{
+	return 0u;
+}
+
 }

@@ -420,6 +420,8 @@ void CommandList::SetGraphicsRootCBV(uint32_t slot, ConstantBuffer_t cb) { asser
 void CommandList::SetComputeRootCBV(uint32_t slot, ConstantBuffer_t cb) { assert(0); }
 void CommandList::SetGraphicsRootCBV(uint32_t slot, DynamicBuffer_t cb) { assert(0); }
 void CommandList::SetComputeRootCBV(uint32_t slot, DynamicBuffer_t cb) { assert(0); }
+void CommandList::SetGraphicsRootCBV(uint32_t slot, GPUAddress_t address) { assert(0); }
+void CommandList::SetComputeRootCBV(uint32_t slot, GPUAddress_t address) { assert(0); }
 void CommandList::SetGraphicsRootSRV(uint32_t slot, ShaderResourceView_t srv) { assert(0); }
 void CommandList::SetComputeRootSRV(uint32_t slot, ShaderResourceView_t srv) { assert(0); }
 void CommandList::SetGraphicsRootUAV(uint32_t slot, UnorderedAccessView_t uav) { assert(0); }

@@ -56,6 +56,9 @@ struct DescriptorHeaps
 {
 	UINT DescriptorHandleIncrement = 0u;
 
+	// Bumped whenever descriptors change, heaps from an older generation are missing descriptors and must not be reused
+	uint64_t Generation = 0u;
+
 	std::vector<Dx12DescriptorHeap> FreeHeaps;
 	std::queue<Dx12DescriptorHeap> PendingDeletion;
 	std::queue<Dx12DescriptorHeap> InFlightHeaps;
@@ -119,6 +122,7 @@ struct DescriptorHeaps
 		else
 		{
 			heap = CreateHeap();
+			heap.Generation = Generation;
 		}
 
 		return heap;
@@ -127,6 +131,8 @@ struct DescriptorHeaps
 	void HeapChanged()
 	{
 		auto lock = std::scoped_lock(Mutex);
+
+		++Generation;
 
 		FreeHeaps.clear();
 
@@ -143,6 +149,13 @@ struct DescriptorHeaps
 
 		heap.DirectFenceValue = graphicsFenceValue;
 		heap.ComputeFenceValue = computeFenceValue;
+
+		// Acquired before descriptors changed, so it's retired once the GPU is done instead of being handed out again
+		if (heap.Generation != Generation)
+		{
+			PendingDeletion.emplace(std::move(heap));
+			return;
+		}
 
 		InFlightHeaps.emplace(std::move(heap));
 	}

@@ -48,6 +48,16 @@ template<typename T> inline void UpdateStructuredBufferFromArray(StructuredBuffe
 void DynamicBuffers_NewFrame();
 void DynamicBuffers_EndFrame();
 
+struct ConstantUploadSpan_s
+{
+	const void* Data = nullptr;
+	size_t Size = 0;
+	size_t DstOffset = 0; // Must be 256 byte aligned
+};
+
+// Copies the spans into a GPU local constant buffer that is valid until the end of the frame
+GPUAddress_t UploadFrameConstants(CommandList* cl, const ConstantUploadSpan_s* spans, size_t numSpans, size_t totalSize);
+
 struct CommandList;
 void UploadBuffers(CommandList* cl);
 
@@ -55,5 +65,6 @@ size_t GetVertexBufferCount();
 size_t GetIndexBufferCount();
 size_t GetStructuredBufferCount();
 size_t GetConstantBufferCount();
+size_t GetFrameConstantPageCount();
 
 }
