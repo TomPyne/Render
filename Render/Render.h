@@ -22,6 +22,7 @@ namespace rl
 struct RenderInitParams
 {
 	bool DebugEnabled = false;
+	bool GPUValidationEnabled = false;
 
 	std::vector<RenderDebugWarnings> DisabledWarnings;
 

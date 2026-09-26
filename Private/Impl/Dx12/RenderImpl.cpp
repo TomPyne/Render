@@ -30,7 +30,7 @@ ComPtr<IDXGIAdapter> EnumerateAdapters(bool debug)
 	return dxgiAdapter;
 }
 
-ComPtr<ID3D12Device5> CreateDevice(bool debug)
+ComPtr<ID3D12Device5> CreateDevice(bool debug, bool gpuValidation)
 {
 	g_render.Debug = debug;
 
@@ -40,7 +40,7 @@ ComPtr<ID3D12Device5> CreateDevice(bool debug)
 		if (SUCCEEDED(D3D12GetDebugInterface(IID_PPV_ARGS(&debugController))))
 		{
 			debugController->EnableDebugLayer();
-			debugController->SetEnableGPUBasedValidation(TRUE);
+			debugController->SetEnableGPUBasedValidation(gpuValidation);
 		}
 	}
 
@@ -143,7 +143,7 @@ void InitCommandQueue(Dx12CommandQueue& Queue, D3D12_COMMAND_LIST_TYPE Type)
 
 bool Render_Init(const RenderInitParams& params)
 {
-	g_render.DxDevice = CreateDevice(params.DebugEnabled);
+	g_render.DxDevice = CreateDevice(params.DebugEnabled, params.GPUValidationEnabled);
 
 	if (!g_render.DxDevice)
 	{
