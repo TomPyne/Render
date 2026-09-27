@@ -80,7 +80,8 @@ GPUAddress_t UploadFrameConstants(CommandList* cl, const ConstantUploadSpan_s* s
 		dxCl->CopyBufferRegion(dstRes, span.DstOffset, staging.Resource, staging.Offset, span.Size);
 	}
 
-	D3D12_RESOURCE_BARRIER barrier = Dx12_TransitionBarrier(dstRes, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
+	// Non pixel shader resource as raytracing scene builds read their instance descs from here
+	D3D12_RESOURCE_BARRIER barrier = Dx12_TransitionBarrier(dstRes, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER | D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
 	dxCl->ResourceBarrier(1u, &barrier);
 
 	return static_cast<GPUAddress_t>(dstRes->GetGPUVirtualAddress());
