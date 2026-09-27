@@ -105,7 +105,7 @@ RaytracingPipelineState_t CreateRaytracingPipelineState(const RaytracingPipeline
 
 RaytracingShaderTable_t CreateRaytracingShaderTable(RaytracingPipelineState_t RaytracingPipelineState, const RaytracingShaderTableLayout& Layout)
 {
-    RaytracingShaderTable_t Handle = g_RaytracingShaderTables.Make(RaytracingPipelineStatePtr(RaytracingPipelineState), Layout);
+    RaytracingShaderTable_t Handle = g_RaytracingShaderTables.Make(RaytracingPipelineStatePtr::Ref(RaytracingPipelineState), Layout);
 
 	if (!CreateRaytracingShaderTableImpl(Handle, RaytracingPipelineState, Layout))
 	{

@@ -161,18 +161,10 @@ bool CreateRaytracingGeometryImpl(RaytracingGeometry_t Handle, const RaytracingG
 
     BLAS& Geom = g_BLAS.Alloc(Handle);
 
-    // RenderPtr adopts a handle without adding a ref
-    auto AddRef = [](auto Handle)
-    {
-        if (IsValid(Handle))
-            RenderRef(Handle);
-        return Handle;
-    };
-
-    Geom.VertexBuffer = AddRef(Desc.VertexBuffer);
-    Geom.StructuredVertexBuffer = AddRef(Desc.StructuredVertexBuffer);
-    Geom.IndexBuffer = AddRef(Desc.IndexBuffer);
-    Geom.StructuredIndexBuffer = AddRef(Desc.StructuredIndexBuffer);
+    Geom.VertexBuffer = VertexBufferPtr::Ref(Desc.VertexBuffer);
+    Geom.StructuredVertexBuffer = StructuredBufferPtr::Ref(Desc.StructuredVertexBuffer);
+    Geom.IndexBuffer = IndexBufferPtr::Ref(Desc.IndexBuffer);
+    Geom.StructuredIndexBuffer = StructuredBufferPtr::Ref(Desc.StructuredIndexBuffer);
 
     Geom.DxGeometryDescs.reserve(Desc.SubGeometries.size());
     for (const RaytracingSubGeometry& SubGeometry : Desc.SubGeometries)
@@ -311,8 +303,7 @@ void WriteRaytracingInstancesImpl(RaytracingScene_t Scene, void* Dst, const Rayt
         {
             DxInstance.AccelerationStructure = Geom->DxBuffer->GetGPUVirtualAddress();
 
-            RenderRef(Instance.Geometry);
-            BuiltGeometries.emplace_back(Instance.Geometry);
+            BuiltGeometries.push_back(RaytracingGeometryPtr::Ref(Instance.Geometry));
         }
 
         // Dst may be write-combined, so write each instance once and never read it back

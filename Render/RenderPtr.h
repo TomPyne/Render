@@ -31,10 +31,19 @@ struct RenderPtr
 		RenderRelease(Handle);
 	}
 
-	// We always assume the incoming type is reffed already 
+	// Adopts the handle's existing ref, for the result of a Create call. Use Ref for a handle owned elsewhere.
 	RenderPtr(RenderType_t handle)
 		: Handle(handle)
 	{}
+
+	// Takes a new ref on a handle owned elsewhere
+	static RenderPtr Ref(RenderType_t handle)
+	{
+		if (handle != RenderType_t::INVALID)
+			RenderRef(handle);
+
+		return RenderPtr(handle);
+	}
 
 	inline bool IsValid() const noexcept
 	{
