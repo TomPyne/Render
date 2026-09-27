@@ -60,7 +60,7 @@ RaytracingGeometry_t CreateRaytracingGeometry(const RaytracingGeometryDesc& Desc
 
     if (Desc.IndexBuffer != IndexBuffer_t::INVALID)
     {
-        if (Desc.StructuredVertexBuffer != StructuredBuffer_t::INVALID)
+        if (Desc.StructuredIndexBuffer != StructuredBuffer_t::INVALID)
         {
             return RaytracingGeometry_t::INVALID;
         }
