@@ -18,12 +18,12 @@ enum class ShaderProfile : uint8_t
 	PS_5_1,
 	VS_5_1,
 	GS_5_1,
-	CS_6_0,
-	PS_6_0,
-	VS_6_0,
-	GS_6_0,
-	MS_6_0,
-	AS_6_0,
+	CS_6_6,
+	PS_6_6,
+	VS_6_6,
+	GS_6_6,
+	MS_6_6,
+	AS_6_6,
 	LIB_6_3,
 	COUNT
 };

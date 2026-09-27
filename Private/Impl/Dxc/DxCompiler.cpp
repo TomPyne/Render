@@ -24,12 +24,12 @@ LPCWSTR ShaderProfileStr[(uint8_t)ShaderProfile::COUNT] =
 	L"ps_5_1",
 	L"vs_5_1",
 	L"gs_5_1",
-	L"cs_6_0",
-	L"ps_6_0",
-	L"vs_6_0",
-	L"gs_6_0",
-	L"ms_6_5",
-	L"as_6_5",
+	L"cs_6_6",
+	L"ps_6_6",
+	L"vs_6_6",
+	L"gs_6_6",
+	L"ms_6_6",
+	L"as_6_6",
 	L"lib_6_3",
 };
 

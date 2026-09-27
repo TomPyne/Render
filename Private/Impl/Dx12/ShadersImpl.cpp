@@ -48,32 +48,32 @@ ShaderCompileResult CompileShaderInternal(ShaderProfile target, const ShaderComp
 
 ShaderCompileResult CompileShader(VertexShader_t handle, const ShaderCompileParams Params)
 {
-	return CompileShaderInternal(ShaderProfile::VS_6_0, Params, g_shaders.CompiledVertexBlobs.Alloc(handle));
+	return CompileShaderInternal(ShaderProfile::VS_6_6, Params, g_shaders.CompiledVertexBlobs.Alloc(handle));
 }
 
 ShaderCompileResult CompileShader(PixelShader_t handle, const ShaderCompileParams Params)
 {
-	return CompileShaderInternal(ShaderProfile::PS_6_0, Params, g_shaders.CompiledPixelBlobs.Alloc(handle));
+	return CompileShaderInternal(ShaderProfile::PS_6_6, Params, g_shaders.CompiledPixelBlobs.Alloc(handle));
 }
 
 ShaderCompileResult CompileShader(GeometryShader_t handle, const ShaderCompileParams Params)
 {
-	return CompileShaderInternal(ShaderProfile::GS_6_0, Params, g_shaders.CompiledGeometryBlobs.Alloc(handle));
+	return CompileShaderInternal(ShaderProfile::GS_6_6, Params, g_shaders.CompiledGeometryBlobs.Alloc(handle));
 }
 
 ShaderCompileResult CompileShader(MeshShader_t handle, const ShaderCompileParams Params)
 {
-	return CompileShaderInternal(ShaderProfile::MS_6_0, Params, g_shaders.CompiledMeshBlobs.Alloc(handle));
+	return CompileShaderInternal(ShaderProfile::MS_6_6, Params, g_shaders.CompiledMeshBlobs.Alloc(handle));
 }
 
 ShaderCompileResult CompileShader(AmplificationShader_t handle, const ShaderCompileParams Params)
 {
-	return CompileShaderInternal(ShaderProfile::AS_6_0, Params, g_shaders.CompiledAmplificationBlobs.Alloc(handle));
+	return CompileShaderInternal(ShaderProfile::AS_6_6, Params, g_shaders.CompiledAmplificationBlobs.Alloc(handle));
 }
 
 ShaderCompileResult CompileShader(ComputeShader_t handle, const ShaderCompileParams Params)
 {
-	return CompileShaderInternal(ShaderProfile::CS_6_0, Params, g_shaders.CompiledComputeBlobs.Alloc(handle));
+	return CompileShaderInternal(ShaderProfile::CS_6_6, Params, g_shaders.CompiledComputeBlobs.Alloc(handle));
 }
 
 ShaderCompileResult CompileShader(RaytracingRayGenShader_t handle, const ShaderCompileParams Params)
