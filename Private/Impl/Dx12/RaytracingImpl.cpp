@@ -19,18 +19,24 @@ struct AccelerationStructure
     ComPtr<ID3D12Resource> DxBuffer;
 };
 
+static_assert(sizeof(D3D12_RAYTRACING_INSTANCE_DESC) == RaytracingInstanceDescSize);
+
 struct BLAS : public AccelerationStructure
 {
-    // We must store strong pointers to these so we can rebuild, the callee is responsible for ensuring they maintain the ray trace and raster scenes
+    // Strong refs so the source buffers outlive any build that reads them
     VertexBufferPtr VertexBuffer = {};
+    StructuredBufferPtr StructuredVertexBuffer = {};
     IndexBufferPtr IndexBuffer = {};
+    StructuredBufferPtr StructuredIndexBuffer = {};
 
-    D3D12_RAYTRACING_GEOMETRY_DESC DxDesc = {};
+    // One per sub-geometry, pGeometryDescs of the build desc points into this so it must not be resized after creation
+    std::vector<D3D12_RAYTRACING_GEOMETRY_DESC> DxGeometryDescs;
 };
 
 struct TLAS : public AccelerationStructure
 {
-    std::vector<RaytracingGeometry_t> Meshes;
+    // Geometries referenced by the most recent build, kept alive while the TLAS points at their BLAS
+    std::vector<RaytracingGeometryPtr> BuiltGeometries;
 };
 
 struct Dx12ShaderTable
@@ -62,38 +68,47 @@ bool CreateRaytracingGeometryImpl(RaytracingGeometry_t Handle, const RaytracingG
         }
     }
 
-    BLAS& GeomDesc = g_BLAS.Alloc(Handle);
-
     D3D12_GPU_VIRTUAL_ADDRESS IndexBufferGpuAddress = Dx12_GetIbAddress(Desc.IndexBuffer);
     if (IndexBufferGpuAddress == 0)
     {
         IndexBufferGpuAddress = Dx12_GetSbAddress(Desc.StructuredIndexBuffer);
+        if (IndexBufferGpuAddress == 0)
+        {
+            return false;
+        }
     }
 
-    if (Desc.IndexOffset > 0)
+    const uint32_t IndexSize = Desc.IndexFormat == RenderFormat::R32_UINT ? 4 : 2;
+
+    BLAS& Geom = g_BLAS.Alloc(Handle);
+
+    Geom.VertexBuffer = Desc.VertexBuffer;
+    Geom.StructuredVertexBuffer = Desc.StructuredVertexBuffer;
+    Geom.IndexBuffer = Desc.IndexBuffer;
+    Geom.StructuredIndexBuffer = Desc.StructuredIndexBuffer;
+
+    Geom.DxGeometryDescs.reserve(Desc.SubGeometries.size());
+    for (const RaytracingSubGeometry& SubGeometry : Desc.SubGeometries)
     {
-        IndexBufferGpuAddress += Desc.IndexOffset * (Desc.IndexFormat == RenderFormat::R32_UINT ? 4 : 2);
+        D3D12_RAYTRACING_GEOMETRY_DESC& DxDesc = Geom.DxGeometryDescs.emplace_back();
+        DxDesc.Type = D3D12_RAYTRACING_GEOMETRY_TYPE_TRIANGLES;
+        DxDesc.Triangles.VertexBuffer.StartAddress = VertexBufferGpuAddress;
+        DxDesc.Triangles.VertexBuffer.StrideInBytes = Desc.VertexStride;
+        DxDesc.Triangles.VertexCount = Desc.VertexCount;
+        DxDesc.Triangles.VertexFormat = Dx12_Format(Desc.VertexFormat);
+        DxDesc.Triangles.IndexBuffer = IndexBufferGpuAddress + static_cast<D3D12_GPU_VIRTUAL_ADDRESS>(SubGeometry.IndexOffset) * IndexSize;
+        DxDesc.Triangles.IndexFormat = Dx12_Format(Desc.IndexFormat);
+        DxDesc.Triangles.IndexCount = SubGeometry.IndexCount;
+        DxDesc.Triangles.Transform3x4 = 0;
+        DxDesc.Flags = D3D12_RAYTRACING_GEOMETRY_FLAG_OPAQUE; // TODO: support transparent objects
     }
-
-    GeomDesc.VertexBuffer = Desc.VertexBuffer;
-    GeomDesc.IndexBuffer = Desc.IndexBuffer;
-    GeomDesc.DxDesc.Type = D3D12_RAYTRACING_GEOMETRY_TYPE_TRIANGLES;
-    GeomDesc.DxDesc.Triangles.VertexBuffer.StartAddress = VertexBufferGpuAddress;
-    GeomDesc.DxDesc.Triangles.VertexBuffer.StrideInBytes = Desc.VertexStride;
-    GeomDesc.DxDesc.Triangles.VertexCount = Desc.VertexCount;
-    GeomDesc.DxDesc.Triangles.VertexFormat = Dx12_Format(Desc.VertexFormat);
-    GeomDesc.DxDesc.Triangles.IndexBuffer = IndexBufferGpuAddress;
-    GeomDesc.DxDesc.Triangles.IndexFormat = Dx12_Format(Desc.IndexFormat);
-    GeomDesc.DxDesc.Triangles.IndexCount = Desc.IndexCount;
-    GeomDesc.DxDesc.Triangles.Transform3x4 = 0;
-    GeomDesc.DxDesc.Flags = D3D12_RAYTRACING_GEOMETRY_FLAG_OPAQUE; // TODO: support transparent objects
 
     return true;
 }
 
 bool CreateRaytracingSceneImpl(RaytracingScene_t RtScene)
 {
-    TLAS& Desc = g_TLAS.Alloc(RtScene);
+    g_TLAS.Alloc(RtScene);
 
     return true;
 }
@@ -223,132 +238,6 @@ bool CreateRaytracingShaderTableImpl(RaytracingShaderTable_t ShaderTable, Raytra
     }
 
     return true;
-}
-
-void AddRaytracingGeometryToSceneImpl(RaytracingGeometry_t Geometry, RaytracingScene_t Scene)
-{
-    if (TLAS* DxScene = g_TLAS.Get(Scene))
-    {
-        if (std::find(DxScene->Meshes.begin(), DxScene->Meshes.end(), Geometry) == DxScene->Meshes.end())
-        {
-            DxScene->Meshes.push_back(Geometry);
-        }
-        else
-        {
-            OutputDebugStringA("Duplicated meshes or instancing not supported");
-        }
-    }
-}
-
-void RemoveRaytracingGeometryFromSceneImpl(RaytracingGeometry_t Geometry, RaytracingScene_t Scene)
-{
-    if (TLAS* DxScene = g_TLAS.Get(Scene))
-    {
-        auto FoundIt = std::find(DxScene->Meshes.begin(), DxScene->Meshes.end(), Geometry);
-
-        if (FoundIt == DxScene->Meshes.end())
-        {
-            OutputDebugStringA("Can't remove geometry, not present in scene");
-        }
-        else
-        {
-            DxScene->Meshes.erase(FoundIt);
-        }
-    }
-}
-
-void BuildRaytracingSceneImpl(RaytracingScene_t Scene)
-{
-    // Assume scene is dirty
-    if (!g_TLAS.Valid(Scene))
-        return;
-
-    TLAS& SceneAS = g_TLAS[Scene];
-
-    //Dx12_FlushQueues();
-    DynamicBuffers_NewFrame();
-    CommandListPtr CmdList = CommandList::Create();
-
-    // Ensure all vertex buffers are uploaded before we build geometry
-    UploadBuffers(CmdList.get());
-
-    // Build top level AS
-    D3D12_RAYTRACING_ACCELERATION_STRUCTURE_PREBUILD_INFO TopLevelPrebuildInfo = {};
-    D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC TopLevelAccelerationStructureDesc = {};
-    TopLevelAccelerationStructureDesc.Inputs.Type = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL;
-    TopLevelAccelerationStructureDesc.Inputs.NumDescs = static_cast<UINT>(SceneAS.Meshes.size());
-    TopLevelAccelerationStructureDesc.Inputs.Flags = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_PREFER_FAST_TRACE;
-    TopLevelAccelerationStructureDesc.Inputs.pGeometryDescs = nullptr;
-    TopLevelAccelerationStructureDesc.Inputs.DescsLayout = D3D12_ELEMENTS_LAYOUT_ARRAY;
-    g_render.DxDevice->GetRaytracingAccelerationStructurePrebuildInfo(&TopLevelAccelerationStructureDesc.Inputs, &TopLevelPrebuildInfo);
-
-    ComPtr<ID3D12Resource> TopLevelScratchBuffer = Dx12_CreateBuffer(TopLevelPrebuildInfo.ScratchDataSizeInBytes, D3D12_HEAP_TYPE_DEFAULT, D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
-    SceneAS.DxBuffer = Dx12_CreateBuffer(TopLevelPrebuildInfo.ResultDataMaxSizeInBytes, D3D12_HEAP_TYPE_DEFAULT, D3D12_RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
-
-    TopLevelAccelerationStructureDesc.DestAccelerationStructureData = SceneAS.DxBuffer->GetGPUVirtualAddress();
-    TopLevelAccelerationStructureDesc.ScratchAccelerationStructureData = TopLevelScratchBuffer->GetGPUVirtualAddress();
-
-    ComPtr<ID3D12GraphicsCommandList4> DxRtCmdList;
-    Dx12_GetCommandList(CmdList.get())->QueryInterface(IID_PPV_ARGS(&DxRtCmdList));
-
-    // Set descriptor heaps??
-   
-	std::vector<D3D12_RAYTRACING_INSTANCE_DESC> InstanceDescs;
-    std::vector<ComPtr<ID3D12Resource>> BottomLevelScratchBuffers;
-
-    // Build bottom level AS
-    for (RaytracingGeometry_t RTGeom : SceneAS.Meshes)
-    {
-        if (BLAS* Geom = g_BLAS.Get(RTGeom))
-        {
-            D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC BottomLevelDesc = {};
-			BottomLevelDesc.Inputs.Type = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_TYPE_BOTTOM_LEVEL;
-			BottomLevelDesc.Inputs.NumDescs = 1u;
-			BottomLevelDesc.Inputs.pGeometryDescs = &Geom->DxDesc;
-			BottomLevelDesc.Inputs.Flags = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_PREFER_FAST_TRACE;
-			BottomLevelDesc.Inputs.DescsLayout = D3D12_ELEMENTS_LAYOUT_ARRAY;
-
-			D3D12_RAYTRACING_ACCELERATION_STRUCTURE_PREBUILD_INFO BottomLevelPrebuildInfo = {};
-			g_render.DxDevice->GetRaytracingAccelerationStructurePrebuildInfo(&BottomLevelDesc.Inputs, &BottomLevelPrebuildInfo);
-
-			Geom->DxBuffer = Dx12_CreateBuffer(BottomLevelPrebuildInfo.ResultDataMaxSizeInBytes, D3D12_HEAP_TYPE_DEFAULT, D3D12_RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
-
-			BottomLevelDesc.DestAccelerationStructureData = Geom->DxBuffer->GetGPUVirtualAddress();
-
-			ComPtr<ID3D12Resource> BottomLevelScratchBuffer = Dx12_CreateBuffer(BottomLevelPrebuildInfo.ScratchDataSizeInBytes, D3D12_HEAP_TYPE_DEFAULT, D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
-			BottomLevelScratchBuffers.push_back(BottomLevelScratchBuffer);
-
-			BottomLevelDesc.ScratchAccelerationStructureData = BottomLevelScratchBuffer->GetGPUVirtualAddress();
-
-            DxRtCmdList->BuildRaytracingAccelerationStructure(&BottomLevelDesc, 0, nullptr);
-
-            D3D12_RAYTRACING_INSTANCE_DESC InstanceDesc = {};
-            InstanceDesc.Transform[0][0] = 1.0f;
-            InstanceDesc.Transform[1][1] = 1.0f;
-            InstanceDesc.Transform[2][2] = 1.0f;
-            InstanceDesc.AccelerationStructure = Geom->DxBuffer->GetGPUVirtualAddress();
-            InstanceDesc.Flags = D3D12_RAYTRACING_INSTANCE_FLAG_NONE;
-            InstanceDesc.InstanceID = 0;
-            InstanceDesc.InstanceMask = 1;
-            InstanceDesc.InstanceContributionToHitGroupIndex = 0;// InstanceDescs.size();
-
-            InstanceDescs.push_back(InstanceDesc);
-        }
-    }
-
-    {
-        D3D12_RESOURCE_BARRIER Barrier = Dx12_UavBarrier(nullptr);
-        DxRtCmdList->ResourceBarrier(1u, &Barrier);
-    }
-
-    DynamicBuffer_t InstanceBuffer = CreateDynamicByteBuffer(InstanceDescs.data(), InstanceDescs.size() * sizeof(D3D12_RAYTRACING_INSTANCE_DESC));
-
-    TopLevelAccelerationStructureDesc.Inputs.InstanceDescs = Dx12_GetDbAddress(InstanceBuffer);
-	DxRtCmdList->BuildRaytracingAccelerationStructure(&TopLevelAccelerationStructureDesc, 0, nullptr);
-
-    CommandList::ExecuteAndStall(CmdList);
-
-    DynamicBuffers_EndFrame();
 }
 
 void DestroyRaytracingGeometryImpl(RaytracingGeometry_t RtGeometry)

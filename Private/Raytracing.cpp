@@ -7,14 +7,12 @@
 namespace rl
 {
 
+IDArray<RaytracingGeometry_t, RaytracingGeometryDesc> g_RaytracingGeometry;
+
 struct RaytracingSceneData
 {
-    std::vector<RaytracingGeometryPtr> Geometry;
-
-    bool NeedsUpdate = false;
 };
 
-IDArray<RaytracingGeometry_t, RaytracingGeometryDesc> g_RaytracingGeometry;
 IDArray<RaytracingScene_t, RaytracingSceneData> g_RaytracingScenes;
 
 IDArray<RaytracingPipelineState_t, RaytracingPipelineStateDesc> g_RaytracingPipelines;
@@ -58,12 +56,14 @@ RaytracingGeometry_t CreateRaytracingGeometry(const RaytracingGeometryDesc& Desc
         }
     }
 
-    if (Desc.IndexBuffer != IndexBuffer_t::INVALID)
+    if ((Desc.IndexBuffer == IndexBuffer_t::INVALID) == (Desc.StructuredIndexBuffer == StructuredBuffer_t::INVALID))
     {
-        if (Desc.StructuredIndexBuffer != StructuredBuffer_t::INVALID)
-        {
-            return RaytracingGeometry_t::INVALID;
-        }
+        return RaytracingGeometry_t::INVALID;
+    }
+
+    if (Desc.SubGeometries.empty())
+    {
+        return RaytracingGeometry_t::INVALID;
     }
 
     RaytracingGeometry_t Handle = g_RaytracingGeometry.Create(Desc);
@@ -114,27 +114,6 @@ RaytracingShaderTable_t CreateRaytracingShaderTable(RaytracingPipelineState_t Ra
 	}
 
     return Handle;
-}
-
-void AddRaytracingGeometryToScene(RaytracingGeometry_t Geometry, RaytracingScene_t Scene)
-{
-    if (Geometry != RaytracingGeometry_t::INVALID && Scene != RaytracingScene_t::INVALID)
-    {
-        AddRaytracingGeometryToSceneImpl(Geometry, Scene);
-    }
-}
-
-void RemoveRaytracingGeometryFromScene(RaytracingGeometry_t Geometry, RaytracingScene_t Scene)
-{
-    if (Geometry != RaytracingGeometry_t::INVALID && Scene != RaytracingScene_t::INVALID)
-    {
-        RemoveRaytracingGeometryFromSceneImpl(Geometry, Scene);
-    }
-}
-
-void BuildRaytracingScene(RaytracingScene_t Scene)
-{
-    BuildRaytracingSceneImpl(Scene);
 }
 
 void RenderRef(RaytracingGeometry_t geometry)

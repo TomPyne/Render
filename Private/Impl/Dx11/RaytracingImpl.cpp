@@ -23,14 +23,6 @@ bool CreateRaytracingShaderTableImpl(RaytracingShaderTable_t ShaderTable, Raytra
     return false;
 }
 
-void AddRaytracingGeometryToSceneImpl(RaytracingGeometry_t Geometry, RaytracingScene_t Scene)
-{
-}
-
-void RemoveRaytracingGeometryFromSceneImpl(RaytracingGeometry_t Geometry, RaytracingScene_t Scene)
-{
-}
-
 void DestroyRaytracingGeometryImpl(RaytracingGeometry_t RtGeometry)
 {
 }

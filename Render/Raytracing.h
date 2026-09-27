@@ -67,24 +67,52 @@ struct RaytracingPipelineStateDesc
 	std::wstring DebugName;
 };
 
+// A range of the geometry's index buffer. Indices are absolute into the vertex buffer.
+struct RaytracingSubGeometry
+{
+	uint32_t IndexOffset = 0;
+	uint32_t IndexCount = 0;
+};
+
 struct RaytracingGeometryDesc
 {
 	// Must supply exactly one of either vertex or structured buffer
 	VertexBuffer_t VertexBuffer = {};
 	StructuredBuffer_t StructuredVertexBuffer = {};
 
-	// Required
 	RenderFormat VertexFormat = RenderFormat::UNKNOWN;
 	uint32_t VertexCount = 0;
 	uint32_t VertexStride = 0;
 
-	// Optional, supply either index or structured buffer
+	// Must supply exactly one of either index or structured buffer
 	IndexBuffer_t IndexBuffer = {};
 	StructuredBuffer_t StructuredIndexBuffer = {};
 	RenderFormat IndexFormat = RenderFormat::UNKNOWN;
-	uint32_t IndexCount = 0;
-	uint32_t IndexOffset = 0;
+
+	// At least one. GeometryIndex() in hit shaders is the index into this array.
+	std::vector<RaytracingSubGeometry> SubGeometries;
 };
+
+enum class RaytracingInstanceFlags : uint8_t
+{
+	NONE = 0,
+	TRIANGLE_CULL_DISABLE = 1 << 0,
+	TRIANGLE_FRONT_COUNTERCLOCKWISE = 1 << 1,
+	FORCE_OPAQUE = 1 << 2,
+	FORCE_NON_OPAQUE = 1 << 3,
+};
+IMPLEMENT_FLAGS(RaytracingInstanceFlags, uint8_t);
+
+struct RaytracingInstance
+{
+	RaytracingGeometry_t Geometry = {};
+	float Transform[3][4] = {};		// Object to world, row-major 3x4 affine, applied to column vectors
+	uint32_t InstanceID = 0;		// 24 bits
+	uint8_t Mask = 0xFF;
+	RaytracingInstanceFlags Flags = RaytracingInstanceFlags::NONE;
+};
+
+static constexpr uint32_t RaytracingInstanceDescSize = 64; // Bytes per packed instance written by WriteRaytracingInstances
 
 RaytracingGeometry_t CreateRaytracingGeometry(const RaytracingGeometryDesc& Desc);
 
@@ -93,12 +121,5 @@ RaytracingScene_t CreateRaytracingScene();
 RaytracingPipelineState_t CreateRaytracingPipelineState(const RaytracingPipelineStateDesc& Desc);
 
 RaytracingShaderTable_t CreateRaytracingShaderTable(RaytracingPipelineState_t RaytracingPipelineState, const RaytracingShaderTableLayout& Layout);
-
-// Perhaps return an geometry index from here to assist with creating shader tables
-void AddRaytracingGeometryToScene(RaytracingGeometry_t Geometry, RaytracingScene_t Scene);
-void RemoveRaytracingGeometryFromScene(RaytracingGeometry_t Geometry, RaytracingScene_t Scene);
-
-// Blocking build, flushes GPU.
-void BuildRaytracingScene(RaytracingScene_t Scene);
 
 }
