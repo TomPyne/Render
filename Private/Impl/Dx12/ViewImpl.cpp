@@ -70,7 +70,7 @@ void RenderView::Resize(uint32_t x, uint32_t y)
 		Impl->Textures[i] = Texture_t::INVALID;
 	}
 
-	Dx12_TexturesProcessPendingDeletes(true);
+	Dx12_ProcessDeferredReleases(true);
 
 	for (uint32_t i = 0; i < RenderView::NumBackBuffers; i++)
 	{

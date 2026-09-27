@@ -277,7 +277,6 @@ void CommandList::Dispatch(uint32_t x, uint32_t y, uint32_t z)
 
 void CommandList::DispatchMesh(uint32_t x, uint32_t y, uint32_t z) { assert(0); }
 
-void CommandList::BuildRaytracingScene(RaytracingScene_t scene) { assert(0); }
 
 void CommandList::DispatchRays(RaytracingShaderTable_t ShaderTable, uint32_t X, uint32_t Y, uint32_t Z) { assert(0); }
 

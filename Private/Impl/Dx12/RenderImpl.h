@@ -100,6 +100,10 @@ extern Dx12RenderGlobals g_render;
 void Dx12_FlushQueue(Dx12CommandQueue& queue);
 void Dx12_FlushQueues();
 
+// Keeps the resource alive until every queue has completed the work submitted so far, including work recorded but not yet submitted
+void Dx12_DeferRelease(ComPtr<ID3D12Resource> resource);
+void Dx12_ProcessDeferredReleases(bool flush);
+
 IDxcBlob* Dx12_GetVertexShaderBlob(VertexShader_t vs);
 IDxcBlob* Dx12_GetPixelShaderBlob(PixelShader_t ps);
 IDxcBlob* Dx12_GetGeometryShaderBlob(GeometryShader_t gs);
@@ -117,8 +121,6 @@ uint64_t Dx12_GetSubmittedFenceValue(CommandList* cl);
 void Dx12_DescriptorsBeginFrame();
 
 void Dx12_TexturesBeginFrame();
-void Dx12_TexturesProcessPendingDeletes(bool flush);
-void Dx12_TexturesMarkAsUsedByQueue(Texture_t tex, CommandListType type, uint64_t fenceValue);
 ID3D12Resource* Dx12_GetTextureResource(Texture_t tex);
 
 Dx12DescriptorHeap Dx12_AccquireSrvUavHeap();
@@ -197,7 +199,6 @@ ComPtr<ID3D12Fence> Dx12_CreateFence(uint64_t fenceValue);
 ID3D12RootSignature* Dx12_GetRootSignature(RootSignature_t rs);
 ID3D12CommandSignature* Dx12_GetCommandSignature(IndirectCommand_t ic);
 
-void Dx12_BuildRaytracingScene(CommandList* cl, RaytracingScene_t scene);
 ID3D12StateObject* Dx12_GetRaytracingStateObject(RaytracingPipelineState_t RaytracingPipelineState);
 D3D12_DISPATCH_RAYS_DESC Dx12_GetDispatchRaysDesc(RaytracingShaderTable_t ShaderTable, uint32_t X, uint32_t Y, uint32_t Z);
 ID3D12Resource* Dx12_GetRaytracingScene(RaytracingScene_t scene);

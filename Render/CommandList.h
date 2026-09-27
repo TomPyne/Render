@@ -84,7 +84,6 @@ struct CommandList
 	void DispatchMesh(uint32_t x, uint32_t y, uint32_t z);
 
 	// Raytracing
-	void BuildRaytracingScene(RaytracingScene_t scene);
 	void DispatchRays(RaytracingShaderTable_t ShaderTable, uint32_t X, uint32_t Y, uint32_t Z);
 
 	// Dx11 Style Bind Commands

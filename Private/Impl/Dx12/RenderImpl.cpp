@@ -6,12 +6,63 @@
 
 #include <dxgi1_6.h>
 
+#include <algorithm>
 #include <mutex>
+#include <vector>
 
 namespace rl
 {
 
 Dx12RenderGlobals g_render;
+
+struct Dx12DeferredRelease
+{
+	ComPtr<ID3D12Resource> DxResource;
+	uint64_t DirectFence = 0u;
+	uint64_t ComputeFence = 0u;
+	uint64_t CopyFence = 0u;
+};
+
+std::vector<Dx12DeferredRelease> g_DeferredReleases;
+std::mutex g_DeferredReleasesMutex;
+
+void Dx12_DeferRelease(ComPtr<ID3D12Resource> resource)
+{
+	if (!resource)
+		return;
+
+	// Waits for the next signal on each queue, so work recorded but not yet submitted is covered.
+	// Render_EndFrame signals every queue once per frame, so these values are always reached.
+	Dx12DeferredRelease release;
+	release.DxResource = std::move(resource);
+	release.DirectFence = g_render.DirectQueue.FenceValue + 1;
+	release.ComputeFence = g_render.ComputeQueue.FenceValue + 1;
+	release.CopyFence = g_render.CopyQueue.FenceValue + 1;
+
+	auto lock = std::scoped_lock(g_DeferredReleasesMutex);
+	g_DeferredReleases.emplace_back(std::move(release));
+}
+
+void Dx12_ProcessDeferredReleases(bool flush)
+{
+	if (flush)
+	{
+		Dx12_FlushQueues();
+	}
+
+	const uint64_t completedDirect = g_render.DirectQueue.DxFence->GetCompletedValue();
+	const uint64_t completedCompute = g_render.ComputeQueue.DxFence->GetCompletedValue();
+	const uint64_t completedCopy = g_render.CopyQueue.DxFence->GetCompletedValue();
+
+	auto lock = std::scoped_lock(g_DeferredReleasesMutex);
+
+	auto releasedIt = std::remove_if(g_DeferredReleases.begin(), g_DeferredReleases.end(), [&](const Dx12DeferredRelease& release)
+	{
+		return release.DirectFence <= completedDirect && release.ComputeFence <= completedCompute && release.CopyFence <= completedCopy;
+	});
+
+	g_DeferredReleases.erase(releasedIt, g_DeferredReleases.end());
+}
 
 ComPtr<IDXGIAdapter> EnumerateAdapters(bool debug)
 {
@@ -213,15 +264,23 @@ void Render_BeginRenderFrame()
 {
 	Dx12_DescriptorsBeginFrame();
 	Dx12_TexturesBeginFrame();
+	Dx12_ProcessDeferredReleases(false);
 }
 
 void Render_EndFrame()
 {
+	// Every queue is signalled once per frame, Dx12_DeferRelease relies on it. DynamicBuffers_EndFrame signals graphics and compute.
 	DynamicBuffers_EndFrame();
+	Dx12_Signal(CommandListType::COPY);
 }
 
 void Render_ShutDown()
 {
+	if (g_render.DxDevice)
+	{
+		Dx12_ProcessDeferredReleases(true);
+	}
+
 	g_render.DxDevice = nullptr;
 
 	// RHI TODO: release all device resources if we shutdown the renderer and dont immediately close the program.

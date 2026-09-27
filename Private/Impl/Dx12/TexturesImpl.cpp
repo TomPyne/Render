@@ -11,9 +11,6 @@ namespace rl
 struct Dx12Texture
 {
 	ComPtr<ID3D12Resource> DxResource = {};
-	uint64_t GraphicsFence = 0u;
-	uint64_t ComputeFence = 0u;
-	uint64_t CopyFence = 0u;
 	uint64_t UploadFence = 0u;	// Copy queue fence value of the initial data upload, 0 when there was none
 };
 
@@ -28,9 +25,6 @@ std::shared_mutex g_TexturesMutex;
 
 std::vector<Dx12UploadTexture> g_UploadResources;
 std::mutex g_UploadQueueMutex;
-
-std::vector<Dx12Texture> g_FreeQueue;
-std::mutex g_FreeQueueMutex;
 
 D3D12_RESOURCE_DIMENSION Dx12_ResourceDimension(TextureDimension td)
 {
@@ -241,15 +235,7 @@ void DestroyTexture(Texture_t tex)
 {
 	auto lock = std::unique_lock(g_TexturesMutex);
 
-	g_DxTextures[tex].CopyFence = g_render.CopyQueue.FenceValue;
-	g_DxTextures[tex].GraphicsFence = g_render.DirectQueue.FenceValue;
-	g_DxTextures[tex].ComputeFence = g_render.ComputeQueue.FenceValue;
-
-	{
-		auto lock = std::scoped_lock(g_FreeQueueMutex);
-
-		g_FreeQueue.emplace_back(std::move(g_DxTextures[tex]));
-	}	
+	Dx12_DeferRelease(std::move(g_DxTextures[tex].DxResource));
 
 	g_DxTextures.Free(tex);
 }
@@ -267,53 +253,17 @@ TextureResourceAccessScope::~TextureResourceAccessScope()
 
 void Dx12_TexturesBeginFrame()
 {
-	Dx12_TexturesProcessPendingDeletes(false);
-}
-
-void Dx12_TexturesProcessPendingDeletes(bool flush)
-{
-	static std::mutex processDeletesMutex;
-
-	// Only need one thread processing these at any time just to ensure we dont build a back log of uploads.
-	if(!processDeletesMutex.try_lock())
-	{
-		return;
-	}
-
-	if (flush)
-	{
-		Dx12_FlushQueues();
-	}
-
 	const uint64_t CopyFrameFence = g_render.CopyQueue.DxFence->GetCompletedValue();
-	const uint64_t DirectFrameFence = g_render.DirectQueue.DxFence->GetCompletedValue();
-	const uint64_t ComputeFrameFence = g_render.ComputeQueue.DxFence->GetCompletedValue();
 
+	auto lock = std::scoped_lock(g_UploadQueueMutex);
+
+	for (int32_t i = (int32_t)g_UploadResources.size() - 1; i >= 0; --i)
 	{
-		auto lock = std::scoped_lock(g_FreeQueueMutex);
-
-		for (int32_t i = (int32_t)g_FreeQueue.size() - 1; i >= 0; --i)
+		if (g_UploadResources[i].CopyFence <= CopyFrameFence)
 		{
-			if (g_FreeQueue[i].CopyFence <= CopyFrameFence && g_FreeQueue[i].GraphicsFence <= DirectFrameFence && g_FreeQueue[i].ComputeFence <= ComputeFrameFence)
-			{
-				g_FreeQueue.erase(g_FreeQueue.begin() + i);
-			}
+			g_UploadResources.erase(g_UploadResources.begin() + i);
 		}
 	}
-
-	{
-		auto lock = std::scoped_lock(g_UploadQueueMutex);
-
-		for (int32_t i = (int32_t)g_UploadResources.size() - 1; i >= 0; --i)
-		{
-			if (g_UploadResources[i].CopyFence <= CopyFrameFence)
-			{
-				g_UploadResources.erase(g_UploadResources.begin() + i);
-			}
-		}
-	}
-
-	processDeletesMutex.unlock();
 }
 
 ID3D12Resource* Dx12_GetTextureResource(Texture_t tex)
@@ -335,21 +285,6 @@ void Dx12_SetTextureResource(Texture_t tex, const ComPtr<ID3D12Resource>& resour
 	if (g_DxTextures.Valid(tex))
 	{
 		g_DxTextures[tex].DxResource = resource;
-	}
-}
-
-void Dx12_TexturesMarkAsUsedByQueue(Texture_t tex, CommandListType type, uint64_t fenceValue)
-{
-	auto lock = std::shared_lock(g_TexturesMutex);
-
-	if (g_DxTextures.Valid(tex))
-	{
-		switch (type)
-		{
-		case CommandListType::COPY:		g_DxTextures[tex].CopyFence = fenceValue;		break;
-		case CommandListType::GRAPHICS: g_DxTextures[tex].GraphicsFence = fenceValue;	break;
-		case CommandListType::COMPUTE:	g_DxTextures[tex].ComputeFence = fenceValue;	break;
-		}
 	}
 }
 

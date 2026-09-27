@@ -499,11 +499,6 @@ void CommandList::DispatchMesh(uint32_t x, uint32_t y, uint32_t z)
 	Impl->CL.DxCl->DispatchMesh((UINT)x, (UINT)y, (UINT)z);
 }
 
-void CommandList::BuildRaytracingScene(RaytracingScene_t scene)
-{
-	Dx12_BuildRaytracingScene(this, scene);
-}
-
 void CommandList::DispatchRays(RaytracingShaderTable_t ShaderTable, uint32_t X, uint32_t Y, uint32_t Z)
 {
 	D3D12_DISPATCH_RAYS_DESC DxRayDesc = Dx12_GetDispatchRaysDesc(ShaderTable, X, Y, Z);
