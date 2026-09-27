@@ -85,7 +85,7 @@ struct CommandList
 
 	// Raytracing, the builds must have been prepared this frame, see Raytracing.h. Any thread.
 	void BuildRaytracingGeometry(const RaytracingGeometry_t* Geometries, uint32_t Count);	// Builds, then a UAV barrier so a scene build can read them
-	void BuildRaytracingScene(RaytracingScene_t Scene, GPUAddress_t InstanceDescs, uint32_t InstanceCount);
+	void BuildRaytracingScene(RaytracingScene_t Scene, GPUAddress_t InstanceDescs, uint32_t InstanceCount);	// UAVBarrier the scene before tracing it
 	void DispatchRays(RaytracingShaderTable_t ShaderTable, uint32_t X, uint32_t Y, uint32_t Z);
 
 	// Dx11 Style Bind Commands
@@ -130,6 +130,7 @@ struct CommandList
 	void TransitionResource(StructuredBuffer_t buf, ResourceTransitionState before, ResourceTransitionState after);
 	void UAVBarrier(Texture_t tex);
 	void UAVBarrier(StructuredBuffer_t buf);
+	void UAVBarrier(RaytracingScene_t scene);
 
 	// Events and markers
 	void BeginEvent(const char* EventStr);

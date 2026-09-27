@@ -434,6 +434,7 @@ void CommandList::TransitionResource(Texture_t tex, ResourceTransitionState befo
 void CommandList::TransitionResource(StructuredBuffer_t buf, ResourceTransitionState before, ResourceTransitionState after) {}
 void CommandList::UAVBarrier(Texture_t tex) {}
 void CommandList::UAVBarrier(StructuredBuffer_t buf) {}
+void CommandList::UAVBarrier(RaytracingScene_t scene) {}
 
 void CommandList::BeginEvent(const char* EventStr) {}
 

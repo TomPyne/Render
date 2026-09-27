@@ -644,6 +644,13 @@ void CommandList::UAVBarrier(StructuredBuffer_t buf)
 	Impl->CL.DxCl->ResourceBarrier(1u, &barrier);
 }
 
+void CommandList::UAVBarrier(RaytracingScene_t scene)
+{
+	D3D12_RESOURCE_BARRIER barrier = Dx12_UavBarrier(Dx12_GetRaytracingScene(scene));
+
+	Impl->CL.DxCl->ResourceBarrier(1u, &barrier);
+}
+
 void CommandList::BeginEvent(const char* EventStr) 
 {
 	assert(EventStr);

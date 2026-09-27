@@ -520,9 +520,6 @@ void Dx12_BuildRaytracingScene(ID3D12GraphicsCommandList4* DxCl, RaytracingScene
 
     DxCl->BuildRaytracingAccelerationStructure(&BuildDesc, 0, nullptr);
 
-    // So ray dispatches can read the scene
-    DxCl->ResourceBarrier(1u, &UavBarrier);
-
     SceneAS->Built = true;
 }
 
