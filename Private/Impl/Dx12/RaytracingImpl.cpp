@@ -90,7 +90,7 @@ D3D12_GPU_VIRTUAL_ADDRESS Dx12_ReserveRaytracingScratch(uint64_t Size)
 
         g_Scratch.Size = (std::max)({ g_Scratch.Size * 2, g_Scratch.FrameTotal + AlignedSize, Alignment });
         g_Scratch.Offset = 0;
-        g_Scratch.DxBuffer = Dx12_CreateBuffer(g_Scratch.Size, D3D12_HEAP_TYPE_DEFAULT, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
+        g_Scratch.DxBuffer = Dx12_CreateBuffer(g_Scratch.Size, D3D12_HEAP_TYPE_DEFAULT, D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
         g_Scratch.DxBuffer->SetName(L"Raytracing Scratch");
     }
 
