@@ -116,6 +116,34 @@ RaytracingShaderTable_t CreateRaytracingShaderTable(RaytracingPipelineState_t Ra
     return Handle;
 }
 
+bool PrepareRaytracingGeometryBuild(RaytracingGeometry_t Geometry)
+{
+    if (Geometry == RaytracingGeometry_t::INVALID)
+    {
+        return false;
+    }
+
+    return PrepareRaytracingGeometryBuildImpl(Geometry);
+}
+
+bool PrepareRaytracingSceneBuild(RaytracingScene_t Scene, uint32_t InstanceCount)
+{
+    if (Scene == RaytracingScene_t::INVALID)
+    {
+        return false;
+    }
+
+    return PrepareRaytracingSceneBuildImpl(Scene, InstanceCount);
+}
+
+void WriteRaytracingInstances(RaytracingScene_t Scene, void* Dst, const RaytracingInstance* Src, uint32_t Count)
+{
+    if (Scene != RaytracingScene_t::INVALID)
+    {
+        WriteRaytracingInstancesImpl(Scene, Dst, Src, Count);
+    }
+}
+
 void RenderRef(RaytracingGeometry_t geometry)
 {
     g_RaytracingGeometry.AddRef(geometry);

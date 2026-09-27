@@ -499,6 +499,16 @@ void CommandList::DispatchMesh(uint32_t x, uint32_t y, uint32_t z)
 	Impl->CL.DxCl->DispatchMesh((UINT)x, (UINT)y, (UINT)z);
 }
 
+void CommandList::BuildRaytracingGeometry(const RaytracingGeometry_t* Geometries, uint32_t Count)
+{
+	Dx12_BuildRaytracingGeometry(Impl->CL.DxCl.Get(), Geometries, Count);
+}
+
+void CommandList::BuildRaytracingScene(RaytracingScene_t Scene, GPUAddress_t InstanceDescs, uint32_t InstanceCount)
+{
+	Dx12_BuildRaytracingScene(Impl->CL.DxCl.Get(), Scene, InstanceDescs, InstanceCount);
+}
+
 void CommandList::DispatchRays(RaytracingShaderTable_t ShaderTable, uint32_t X, uint32_t Y, uint32_t Z)
 {
 	D3D12_DISPATCH_RAYS_DESC DxRayDesc = Dx12_GetDispatchRaysDesc(ShaderTable, X, Y, Z);

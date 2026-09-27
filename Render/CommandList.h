@@ -83,7 +83,9 @@ struct CommandList
 	// Mesh Shaders
 	void DispatchMesh(uint32_t x, uint32_t y, uint32_t z);
 
-	// Raytracing
+	// Raytracing, the builds must have been prepared this frame, see Raytracing.h. Any thread.
+	void BuildRaytracingGeometry(const RaytracingGeometry_t* Geometries, uint32_t Count);	// Builds, then a UAV barrier so a scene build can read them
+	void BuildRaytracingScene(RaytracingScene_t Scene, GPUAddress_t InstanceDescs, uint32_t InstanceCount);
 	void DispatchRays(RaytracingShaderTable_t ShaderTable, uint32_t X, uint32_t Y, uint32_t Z);
 
 	// Dx11 Style Bind Commands

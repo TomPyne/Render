@@ -278,6 +278,8 @@ void CommandList::Dispatch(uint32_t x, uint32_t y, uint32_t z)
 void CommandList::DispatchMesh(uint32_t x, uint32_t y, uint32_t z) { assert(0); }
 
 
+void CommandList::BuildRaytracingGeometry(const RaytracingGeometry_t* Geometries, uint32_t Count) { assert(0); }
+void CommandList::BuildRaytracingScene(RaytracingScene_t Scene, GPUAddress_t InstanceDescs, uint32_t InstanceCount) { assert(0); }
 void CommandList::DispatchRays(RaytracingShaderTable_t ShaderTable, uint32_t X, uint32_t Y, uint32_t Z) { assert(0); }
 
 // Dx11 Style Bind Commands

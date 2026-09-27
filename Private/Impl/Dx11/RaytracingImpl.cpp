@@ -23,6 +23,20 @@ bool CreateRaytracingShaderTableImpl(RaytracingShaderTable_t ShaderTable, Raytra
     return false;
 }
 
+bool PrepareRaytracingGeometryBuildImpl(RaytracingGeometry_t Geometry)
+{
+    return false;
+}
+
+bool PrepareRaytracingSceneBuildImpl(RaytracingScene_t Scene, uint32_t InstanceCount)
+{
+    return false;
+}
+
+void WriteRaytracingInstancesImpl(RaytracingScene_t Scene, void* Dst, const RaytracingInstance* Src, uint32_t Count)
+{
+}
+
 void DestroyRaytracingGeometryImpl(RaytracingGeometry_t RtGeometry)
 {
 }

@@ -81,6 +81,9 @@ struct Dx12RenderGlobals
 	bool Debug = false;
 	bool SupportsMeshShaders = false;
 	bool SupportsRaytracing = false;
+
+	// Incremented by Render_BeginFrame, so the first frame is 1
+	uint64_t FrameIndex = 0;
 };
 
 struct Dx12StaticBufferAllocation
@@ -199,6 +202,9 @@ ComPtr<ID3D12Fence> Dx12_CreateFence(uint64_t fenceValue);
 ID3D12RootSignature* Dx12_GetRootSignature(RootSignature_t rs);
 ID3D12CommandSignature* Dx12_GetCommandSignature(IndirectCommand_t ic);
 
+void Dx12_RaytracingBeginFrame();
+void Dx12_BuildRaytracingGeometry(ID3D12GraphicsCommandList4* DxCl, const RaytracingGeometry_t* Geometries, uint32_t Count);
+void Dx12_BuildRaytracingScene(ID3D12GraphicsCommandList4* DxCl, RaytracingScene_t Scene, GPUAddress_t InstanceDescs, uint32_t InstanceCount);
 ID3D12StateObject* Dx12_GetRaytracingStateObject(RaytracingPipelineState_t RaytracingPipelineState);
 D3D12_DISPATCH_RAYS_DESC Dx12_GetDispatchRaysDesc(RaytracingShaderTable_t ShaderTable, uint32_t X, uint32_t Y, uint32_t Z);
 ID3D12Resource* Dx12_GetRaytracingScene(RaytracingScene_t scene);

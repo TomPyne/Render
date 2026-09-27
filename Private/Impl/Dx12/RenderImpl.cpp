@@ -257,7 +257,10 @@ bool Render_Initialised()
 
 void Render_BeginFrame()
 {
+	g_render.FrameIndex++;
+
 	DynamicBuffers_NewFrame();
+	Dx12_RaytracingBeginFrame();
 }
 
 void Render_BeginRenderFrame()

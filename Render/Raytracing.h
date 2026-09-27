@@ -122,4 +122,13 @@ RaytracingPipelineState_t CreateRaytracingPipelineState(const RaytracingPipeline
 
 RaytracingShaderTable_t CreateRaytracingShaderTable(RaytracingPipelineState_t RaytracingPipelineState, const RaytracingShaderTableLayout& Layout);
 
+// Main thread only. Each prepare must be followed by the matching CommandList build in the same frame.
+// Preparing an already built geometry moves it to new memory, so scenes that reference it must be rebuilt in the same frame.
+bool PrepareRaytracingGeometryBuild(RaytracingGeometry_t Geometry);
+bool PrepareRaytracingSceneBuild(RaytracingScene_t Scene, uint32_t InstanceCount);
+
+// Main thread only, after PrepareRaytracingSceneBuild with the same Count. Writes Count * RaytracingInstanceDescSize bytes to Dst,
+// which must be 16 byte aligned. Each instance's geometry must have been built, or prepared this frame.
+void WriteRaytracingInstances(RaytracingScene_t Scene, void* Dst, const RaytracingInstance* Src, uint32_t Count);
+
 }
