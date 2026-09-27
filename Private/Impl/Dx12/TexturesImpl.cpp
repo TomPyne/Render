@@ -33,8 +33,12 @@ D3D12_RESOURCE_DIMENSION Dx12_ResourceDimension(TextureDimension td)
 	case TextureDimension::UNKNOWN:
 		return D3D12_RESOURCE_DIMENSION_UNKNOWN;
 	case TextureDimension::TEX1D:
+	case TextureDimension::TEX1D_ARRAY:
 		return D3D12_RESOURCE_DIMENSION_TEXTURE1D;
 	case TextureDimension::TEX2D:
+	case TextureDimension::TEX2D_ARRAY:
+	case TextureDimension::CUBEMAP:
+	case TextureDimension::CUBEMAP_ARRAY:
 		return D3D12_RESOURCE_DIMENSION_TEXTURE2D;
 	case TextureDimension::TEX3D:
 		return D3D12_RESOURCE_DIMENSION_TEXTURE3D;
@@ -103,8 +107,12 @@ bool CreateTextureImpl(Texture_t tex, const TextureCreateDescEx& desc)
 
 	if (desc.Data)
 	{
+		// 3D textures have one subresource per mip, depth slices live inside it
+		const uint32_t arraySize = desc.Dimension == TextureDimension::TEX3D ? 1u : desc.DepthOrArraySize;
+		const uint32_t numSubResources = desc.MipCount * arraySize;
+
 		UINT64 requiredUploadSize = 0u;
-		g_render.DxDevice->GetCopyableFootprints(&resourceDesc, 0, resourceDesc.MipLevels * resourceDesc.DepthOrArraySize, 0u, nullptr, nullptr, nullptr, &requiredUploadSize);
+		g_render.DxDevice->GetCopyableFootprints(&resourceDesc, 0, numSubResources, 0u, nullptr, nullptr, nullptr, &requiredUploadSize);
 
 		ComPtr<ID3D12Resource> uploadResource = Dx12_CreateBuffer(requiredUploadSize, D3D12_HEAP_TYPE_UPLOAD, D3D12_RESOURCE_STATE_GENERIC_READ, D3D12_RESOURCE_FLAG_NONE);
 
@@ -121,8 +129,6 @@ bool CreateTextureImpl(Texture_t tex, const TextureCreateDescEx& desc)
 			return false;
 		}
 
-		const size_t numSubResources = desc.MipCount * desc.DepthOrArraySize;
-
 		std::vector<D3D12_PLACED_SUBRESOURCE_FOOTPRINT> layouts;
 		std::vector<UINT64> rowSizesInBytes;
 		std::vector<UINT> numRows;
@@ -132,36 +138,30 @@ bool CreateTextureImpl(Texture_t tex, const TextureCreateDescEx& desc)
 		numRows.resize(numSubResources);
 
 		UINT64 requiredSize = 0u;
-		g_render.DxDevice->GetCopyableFootprints(&resourceDesc, 0u, (UINT)numSubResources, 0u, layouts.data(), numRows.data(), rowSizesInBytes.data(), &requiredSize);
+		g_render.DxDevice->GetCopyableFootprints(&resourceDesc, 0u, numSubResources, 0u, layouts.data(), numRows.data(), rowSizesInBytes.data(), &requiredSize);
 
-		std::vector<D3D12_SUBRESOURCE_DATA> subResData;
-		subResData.resize(desc.MipCount * desc.DepthOrArraySize);
-
-		for (uint32_t d = 0u; d < desc.DepthOrArraySize; d++)
+		for (uint32_t a = 0u; a < arraySize; a++)
 		{
 			for (uint32_t m = 0u; m < desc.MipCount; m++)
 			{
-				uint32_t subResIndex = d * desc.MipCount + m;
-				D3D12_SUBRESOURCE_DATA& subRes = subResData[subResIndex];
+				uint32_t subResIndex = a * desc.MipCount + m;
 				const MipData& mipData = desc.Data[subResIndex];
-
-				subRes.pData = mipData.Data;
-				subRes.RowPitch = mipData.RowPitch;
-				subRes.SlicePitch = mipData.SlicePitch;
 
 				const D3D12_PLACED_SUBRESOURCE_FOOTPRINT& layout = layouts[subResIndex];
 				UINT64 rowSizeBytes = rowSizesInBytes[subResIndex];
 				UINT rowCount = numRows[subResIndex];
+				const SIZE_T destSlicePitch = (SIZE_T)layout.Footprint.RowPitch * (SIZE_T)rowCount;
 
-				D3D12_MEMCPY_DEST destData = { (BYTE*)pMapped + layout.Footprint.RowPitch, (SIZE_T)layout.Footprint.RowPitch * (SIZE_T)rowCount };
-
-				auto pDestSlice = static_cast<BYTE*>(pMapped) + layout.Offset;
-				auto pSrcSlice = static_cast<const BYTE*>(mipData.Data);
-				for (UINT y = 0; y < rowCount; ++y)
+				for (UINT z = 0; z < layout.Footprint.Depth; ++z)
 				{
-					memcpy(pDestSlice + layout.Footprint.RowPitch * y,
-						pSrcSlice + mipData.RowPitch * LONG_PTR(y),
-						rowSizeBytes);
+					auto pDestSlice = static_cast<BYTE*>(pMapped) + layout.Offset + destSlicePitch * z;
+					auto pSrcSlice = static_cast<const BYTE*>(mipData.Data) + mipData.SlicePitch * z;
+					for (UINT y = 0; y < rowCount; ++y)
+					{
+						memcpy(pDestSlice + layout.Footprint.RowPitch * y,
+							pSrcSlice + mipData.RowPitch * LONG_PTR(y),
+							rowSizeBytes);
+					}
 				}
 			}
 		}
@@ -172,7 +172,7 @@ bool CreateTextureImpl(Texture_t tex, const TextureCreateDescEx& desc)
 
 		ID3D12GraphicsCommandList* dxcl = Dx12_GetCommandList(uploadCl.get());		
 
-		for(uint32_t i = 0; i < desc.DepthOrArraySize * desc.MipCount; i++)
+		for(uint32_t i = 0; i < numSubResources; i++)
 		{
 			D3D12_TEXTURE_COPY_LOCATION dst = {};
 			dst.pResource = texture.DxResource.Get();
