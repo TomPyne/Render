@@ -176,6 +176,8 @@ public:
 		RequestUploadAlloc(alloc, pBuffer.Get(), pUploadBuffer.Get());
 	}
 
+	// TODO: The range is reusable immediately, so a new allocation's upload can overwrite memory a frame in flight is still reading.
+	// Needs a fence-tagged pending free list, like Dx12_DeferRelease, before the block returns to the free lists.
 	void Free(const Dx12StaticBufferAllocation& alloc)
 	{
 		FreeBlocksByOffsetMap::iterator nextBlockIt = FreeBlocksByOffset.upper_bound(alloc.Offset);
@@ -254,6 +256,10 @@ public:
 		pUploadBuffer->Unmap(0, nullptr);
 		pCpuMemory = nullptr;
 		pGpuMemory = D3D12_GPU_VIRTUAL_ADDRESS{ 0 };
+
+		// Frames in flight and pending upload copies may still reference these
+		Dx12_DeferRelease(std::move(pUploadBuffer));
+		Dx12_DeferRelease(std::move(pBuffer));
 	}
 
 	D3D12_GPU_VIRTUAL_ADDRESS GetGpuAddress() { return pGpuMemory; }
