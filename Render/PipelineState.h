@@ -114,6 +114,12 @@ enum class ComparisionFunc : uint8_t
 	ALWAYS,
 };
 
+enum class DepthWriteMask : uint8_t
+{
+	ZERO,
+	ALL,
+};
+
 struct GraphicsPipelineTargetDesc
 {
 	static constexpr uint32_t MaxRenderTargets = 8u;
@@ -143,6 +149,7 @@ struct GraphicsPipelineStateDesc
 
 	// Depth desc
 	bool DepthEnabled = false;
+	DepthWriteMask DepthWrite = DepthWriteMask::ALL;
 	ComparisionFunc DepthCompare = ComparisionFunc::NEVER;
 	
 	GraphicsPipelineTargetDesc TargetDesc = {};
@@ -168,10 +175,11 @@ struct GraphicsPipelineStateDesc
 		return *this; 
 	}
 
-	GraphicsPipelineStateDesc& DepthDesc(bool enabled, ComparisionFunc cf = ComparisionFunc::NEVER) 
+	GraphicsPipelineStateDesc& DepthDesc(bool enabled, ComparisionFunc cf = ComparisionFunc::NEVER, DepthWriteMask writeMask = DepthWriteMask::ALL) 
 	{
 		DepthEnabled = enabled; 
 		DepthCompare = cf;
+		DepthWrite = writeMask;
 		return *this; 
 	}
 

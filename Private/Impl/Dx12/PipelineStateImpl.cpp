@@ -255,7 +255,7 @@ bool CompileGraphicsPipelineState(GraphicsPipelineState_t handle, const Graphics
 		CD3DX12_DEPTH_STENCIL_DESC1& dxDepthStencilDesc = StateStream.DepthStencilState;
 
 		dxDepthStencilDesc.DepthEnable = desc.DepthEnabled;
-		dxDepthStencilDesc.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
+		dxDepthStencilDesc.DepthWriteMask = desc.DepthWrite == DepthWriteMask::ALL ? D3D12_DEPTH_WRITE_MASK_ALL : D3D12_DEPTH_WRITE_MASK_ZERO;
 		dxDepthStencilDesc.DepthFunc = GetComparisonFunc(desc.DepthCompare);
 		dxDepthStencilDesc.StencilEnable = FALSE;
 		dxDepthStencilDesc.StencilReadMask = 0;

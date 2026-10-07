@@ -43,13 +43,13 @@ static D3D11_COMPARISON_FUNC GetComparisonFunc(ComparisionFunc f)
 	return (D3D11_COMPARISON_FUNC)0;
 }
 
-D3D11_DEPTH_STENCIL_DESC CreateDSS(bool depthEnabled, ComparisionFunc func)
+D3D11_DEPTH_STENCIL_DESC CreateDSS(bool depthEnabled, ComparisionFunc func, DepthWriteMask writeMask)
 {
 	D3D11_DEPTH_STENCIL_DESC dss;
 	ZeroMemory(&dss, sizeof(dss));
 
 	dss.DepthEnable = depthEnabled;
-	dss.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
+	dss.DepthWriteMask = writeMask == DepthWriteMask::ALL ? D3D11_DEPTH_WRITE_MASK_ALL : D3D11_DEPTH_WRITE_MASK_ZERO;
 	dss.DepthFunc = GetComparisonFunc(func);
 
 	return dss;
@@ -185,7 +185,7 @@ bool CompileGraphicsPipelineState(GraphicsPipelineState_t handle, const Graphics
 	}
 	
 	{
-		D3D11_DEPTH_STENCIL_DESC dss = CreateDSS(desc.DepthEnabled, desc.DepthCompare);
+		D3D11_DEPTH_STENCIL_DESC dss = CreateDSS(desc.DepthEnabled, desc.DepthCompare, desc.DepthWrite);
 		if (FAILED(g_render.Device->CreateDepthStencilState(&dss, &pso->dss)))
 		{
 			fprintf(stderr, "CompileGraphicsPipelineState failed to create depth state");
